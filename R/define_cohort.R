@@ -5,7 +5,8 @@ library(usRds)
 library(strobe)
 
 #Import core demographics from "patients" file
-patients_raw<-usRds::load_usrds_file("patients")
+patients_raw<-usRds::load_usrds_file("patients")%>%
+  select(-ZIPCODE) #This is ZIP code at time of USRDS initiation, but we want at time of crypto ds
 
 #Initialize a STROBE cohort
 patients_clean<-strobe_initialize(patients_raw, "Initial USRDS cohort")
@@ -113,7 +114,36 @@ patients_clean<-patients_clean%>%
   strobe_filter("first_cryptococcus_date-BEGDATE>=365", 
                 "365+ days of coverage prior to first cryptococcus claim", 
                 "Fewer than 365 days of coverage")
-  
+
+#Load ZIP codes
+ZIP_code_df<-load_usrds_file("residenc", 
+                             usrds_ids = patients_clean$USRDS_ID)%>%
+  select(USRDS_ID, ZIPCODE, BEGRES, ENDRES)
+
+#Join patient cohort to ZIP code data 
+patients_clean<-left_join(patients_clean,
+                          ZIP_code_df,
+                          join_by(USRDS_ID, between(first_cryptococcus_date, BEGRES, ENDRES)))
+
+#Load transplant data, and add a date for the next transplant (missing set to 1-1-2100)
+transplant_df<-load_usrds_file("tx", usrds_ids = patients_clean$USRDS_ID)%>%
+  select(USRDS_ID, TDATE, FAILDATE, PROVUSRD, YEAR)%>%
+  arrange(USRDS_ID, TDATE)%>%
+  group_by(USRDS_ID)%>%
+  mutate(TDATE_lead=lead(TDATE))%>%
+  ungroup()%>%
+  mutate(TDATE_lead=coalesce(TDATE_lead, as.Date("2100-01-01")))
+
+#Load facility data
+facility <- load_usrds_file("facility")%>%
+  select(ZIPCODE, PROVUSRD, FS_YEAR)%>%
+  rename(YEAR=FS_YEAR)%>%
+  mutate(YEAR=as.double(YEAR))
+
+#Interval merge
+
+transplant_joined<-left_join(transplant_df, facility, join_by(PROVUSRD, closest(x$YEAR<=y$YEAR )))
+
 #Plot strobe diagram
 plot_strobe_diagram(incl_fontsize = 150, 
                     excl_fontsize = 150,

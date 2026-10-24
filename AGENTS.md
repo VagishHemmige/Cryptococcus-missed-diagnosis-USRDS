@@ -12,6 +12,8 @@ Three files divide the documentation:
 
 Read all three before making changes. Each file covers its own topic and does not repeat the others.
 
+**Template repository.** This project follows the layout and conventions of [Cryptococcus-cost-analysis](https://github.com/VagishHemmige/Cryptococcus-cost-analysis): the script organization, the `main.R` entry point, chunk-labelled scripts, cohort flow with `flowchart`, and the Quarto website. When this file doesn't settle how something should be done, follow that repository's pattern. Its `R/define_cohort.R` is deprecated (it uses `strobe`), so use its `R/create_cohort.R` instead.
+
 ## The project
 
 This repository analyzes potential missed opportunities for diagnosing cryptococcosis among kidney transplant recipients. It uses United States Renal Data System (USRDS) data linked to Medicare claims.
@@ -42,7 +44,7 @@ Scripts are divided into labelled sections, so that Quarto documents can reuse t
 
 - Every logical step has a label. A label covers the code from its line to the next label.
 - Labels are kebab-case, describe the step, and are **unique across all scripts**. Quarto pulls chunks by label, so a duplicate label silently picks up the wrong code.
-- Renaming or deleting a label breaks any Quarto document that uses it. Search the `.qmd` files before you change one.
+- Renaming or deleting a label breaks the Quarto page that uses it. Search the `.qmd` files before you change one.
 - Scripts must still run end to end through `main.R`. Labels are comments and must never change what the code does.
 
 ## Variable labels
@@ -51,15 +53,21 @@ Scripts are divided into labelled sections, so that Quarto documents can reuse t
 - For USRDS variables, use usRds's `apply_usrds_varlabels()` and `apply_usrds_factors()` rather than writing labels by hand.
 - Label each derived variable where it is created, in a form a reader would recognize. Include units, and windows where they apply (for example, "Any potential missed opportunity, days −90 to −1").
 
-## Quarto
+## Quarto website
 
-- **No analysis logic in Quarto documents.** They present results; they do not compute them.
-  - Load script code with `knitr::read_chunk()` and call chunks by label.
-  - Or work from objects that `main.R` creates.
-- **Text from objects.** Write numbers in the text with inline R expressions drawn from objects. Never type a result by hand.
-- **Disclosure applies to rendered output.** Rendered HTML, PDF, or Word files that contain results are outputs under the disclosure rules below. Do not commit rendered files that contain results. Add their output folders to `.gitignore`.
-- **Figures** need alt text (`fig-alt`), and tables need captions. Quarto cross-references (`@fig-`, `@tbl-`) need matching labels.
-- `README.Rmd` is still the usethis template. Replace it, or move to Quarto, before the repository is shared.
+The Quarto site documents the code. It does not run the analysis. It follows the template repository:
+
+- **Setup files:** `_quarto.yml` and `index.qmd` sit at the root. There is one page per script in `quarto/`, named after the script (for example, `quarto/create_cohort.qmd` for `R/create_cohort.R`).
+- **Showing code:** each page loads its script with `knitr::read_chunk("../R/<script>.R")` in a hidden chunk. It then shows each labelled section in a chunk with `#| eval: false`, with prose explaining what the section does and why. Pages link to the script on GitHub and to the scripts it depends on.
+- **Never evaluate analysis code in the site.** Pages must render without USRDS data. The rendered site therefore contains code and explanation only, never results.
+- **Rendering:** the site renders to `docs/` and is served by GitHub Pages. Re-render it after changing a script's labels or explanations, and commit `docs/`.
+- **New scripts:** when you add a script, add its page and its sidebar entry in `_quarto.yml` in the same commit.
+
+## Outputs
+
+- **Exported files:** tables and figures are exported by `R/tables.R` and `R/figures.R` to `tables/` and `figures/`. Both folders are gitignored, because their contents are results under the disclosure rules below.
+- **Helper functions** go in `R/functions.R`, sourced after `setup.R`. A function takes its inputs as arguments and does not read global objects.
+- `README.Rmd` is still the usethis template. Replace it before the repository is shared.
 
 ## Restricted data (applies to everyone)
 
@@ -184,9 +192,10 @@ Before opening a pull request, check the items below that apply to your change.
 **Structure and documentation**
 
 - Does `ARCHITECTURE.md` still describe the scripts and the data flow?
-- Are the chunk labels unique, and do the Quarto documents still find every label they use?
+- Are the chunk labels unique, and does each script's Quarto page still find every label it uses?
+- Does every script have a Quarto page and a sidebar entry, and has `docs/` been re-rendered?
+- Are all site chunks `eval: false`?
 - Are new derived variables labelled?
-- Is any number in the text produced by inline code rather than typed?
 
 **Execution**
 

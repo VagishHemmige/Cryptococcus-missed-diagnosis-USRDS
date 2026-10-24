@@ -4,7 +4,7 @@
 - **Date:** 2026-10-24
 - **Reporting frameworks:** STROBE and RECORD. Bracketed references point to the reporting items each section addresses. They do not mean the methods have been validated.
 - **Scope:** This plan covers study design, definitions, and statistical methods. Implementation details (files, variables, functions, and code organization) are kept separately in AGENTS.md.
-- **Status:** Items marked **[VERIFY]** depend on data documentation or literature. Items marked **[TO FINALIZE]** are design decisions not yet made. Both must be resolved before the results that depend on them are examined. Later changes go in the change log.
+- **Status:** Items marked **[VERIFY]** depend on data documentation or literature. Items marked **[TO FINALIZE]** are design decisions not yet made. Both must be resolved before the results that depend on them are examined. Changes to the plan are tracked in git history.
 
 ## 1. Title, data source, and overview [S1, R1]
 
@@ -334,7 +334,7 @@ Follow the USRDS and CMS data use restrictions:
 
 Check the exact disclosure wording in the governing data use agreement before dissemination.
 
-## 16. Open items and change log
+## 16. Open items
 
 **Required before running the analyses that depend on them:**
 
@@ -354,8 +354,3 @@ Check the exact disclosure wording in the governing data use agreement before di
   - handling of sparse comorbidities (section 11)
   - confidence interval methods (section 11)
   - whether a formal expected-rate comparison is added (section 9)
-
-| Date | Version | Decision/change | Rationale | Timing relative to dependent results |
-|---|---|---|---|---|
-| 2026-10-24 | 0.2 | Reconciled the plan with decisions from project discussion: case confirmation; earliest observed index; chronology of transplant and prior disease; fixed history and opportunity periods; encounter grouping; procedure pathway; mortality and geographic analyses; missing data | Moved from a generic STROBE/RECORD outline to a study-specific prespecification | Before any opportunity or mortality results |
-| 2026-10-24 | 0.3 | Separated institutional claims into inpatient, outpatient, and other types; counted outpatient institutional encounters toward the two-encounter confirmation rule; changed the index-date choice to a bounded or unbounded rule still to be finalized; set case accrual by claims availability; defined Medicare primary following the USRDS Researcher's Guide; added a weekly-rate descriptive reference; prespecified the fallback mortality model and the handling of sparse covariates; added post-transplant Medicare selection to the bias section; added a study size section; defined the chronology exclusions; moved implementation details to AGENTS.md | Review of version 0.2 | Before any opportunity or mortality results. **[TO CONFIRM]** Cohort flowchart counts from the earlier single-claim definition may already have been viewed; none of these changes depend on them. |

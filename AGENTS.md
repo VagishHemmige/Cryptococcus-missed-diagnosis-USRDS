@@ -100,6 +100,14 @@ The [usRds](https://github.com/VagishHemmige/usRds) package is the **first place
 
 Sources: USRDS 2025 Researcher's Guide, Appendix B (data file descriptions), and Appendix C (formats). Check these against the release you are using.
 
+**Where to find the documentation:**
+
+- **The Guide and its appendices.** These are public. Get them from the NIDDK [Researcher's Guide page](https://www.niddk.nih.gov/about-niddk/strategic-plans-reports/usrds/for-researchers/researchers-guide), and use the year that matches the SAF release under your DUA.
+  - They are not committed here, because they change with each release.
+  - If you work with an AI agent, give it the documents, or a text conversion of them, as context.
+- **Variable labels and formats.** usRds carries these and applies them with `apply_usrds_varlabels()` and `apply_usrds_factors()`. That is the machine-readable source in code.
+- **Check against the document.** The facts below are a summary. Before relying on one, check it against the document for your release.
+
 **Institutional ("IN") claims cover more than inpatient care.** They include inpatient, outpatient, skilled nursing facility (SNF), home health, and hospice claims.
 
 - `HCFASAF` gives the claim type: `I` inpatient, `O` outpatient, `N` SNF, `H` home health, `S` hospice. In older files, `M` is a REBUS inpatient stay.
@@ -219,8 +227,8 @@ This is a working list. Delete each item as it is resolved, or move these into G
 - The case definition uses any single claim. The plan requires confirmation (plan §5).
 - The case accrual period comes from the fixed `claim_years`. The plan bases it on claims availability: the first claims date plus 365 days, through the last complete claims date.
 - The flowchart uses `TX1DATE` for timing. Transplant characteristics should come from the most recent transplant before index. `transplant_df` and `transplant_joined` are built but not yet joined to the cohort.
-- Case confirmation and index date: `establish_dx_date()` does not match plan §5. See the usRds issues.
-- Medicare coverage: `verify_medicare_primary()` has open problems that can make `medicare_primary_TF` silently `FALSE` (the cache and payer-label matching). See the usRds issues.
+- Case confirmation and index date: `establish_dx_date()` does not match plan §5 ([usRds#4](https://github.com/VagishHemmige/usRds/issues/4)).
+- Medicare coverage: `verify_medicare_primary()` has open problems that can make `medicare_primary_TF` silently `FALSE`, from the cache and from payer-label matching ([usRds#5](https://github.com/VagishHemmige/usRds/issues/5)).
 - The facility join uses `closest(x$YEAR <= y$YEAR)`. Check that it picks the facility year that matches the transplant.
 - Corrections needed in the code maps in `setup.R`:
   - `B451` is in ICD-10 "Brain Infection" (the outcome used as a predictor)
@@ -230,7 +238,7 @@ This is a working list. Delete each item as it is resolved, or move these into G
   - ICD-9 `725` is polymyalgia rheumatica
   - `0W9B3ZX` is labeled bronchoscopy but is drainage of the left pleural cavity
   - the mediastinal entries are not comparable between ICD-9 (a procedure) and ICD-10 (`J98`)
-  - three-character ICD-10 entries need expansion to full codes, because `get_*_ICD()` matches exactly
+  - three-character ICD-10 entries need expansion to full codes, because `get_*_ICD()` matches exactly ([usRds#3](https://github.com/VagishHemmige/usRds/issues/3))
   - there are no CPT/HCPCS codes for PS and outpatient procedures
 - Not yet implemented: comorbidities, encounter grouping, the opportunity algorithm, mortality analyses, RUCA and distance.
 

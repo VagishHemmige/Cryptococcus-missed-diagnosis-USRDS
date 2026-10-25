@@ -1,356 +1,112 @@
 # Analysis plan: Potential missed opportunities for diagnosis of cryptococcosis among kidney transplant recipients using USRDS
 
-- **Version:** 0.3 (draft for review)
-- **Date:** 2026-10-24
-- **Reporting frameworks:** STROBE and RECORD. Bracketed references point to the reporting items each section addresses. They do not mean the methods have been validated.
-- **Scope:** This plan covers study design, definitions, and statistical methods. Implementation details (files, variables, functions, and code organization) are kept separately in AGENTS.md.
-- **Status:** Items marked **[VERIFY]** depend on data documentation or literature. Items marked **[TO FINALIZE]** are design decisions not yet made. Both must be resolved before the results that depend on them are examined. Changes to the plan are tracked in git history.
+**Status:** Reconciled proposal, 25 October 2026; not yet adopted. Citations support relevant methodological precedents but do not validate this study’s claims algorithms.
 
-## 1. Title, data source, and overview [S1, R1]
+## Scope and reporting framework
 
-This retrospective claims-based study will identify potential missed diagnostic opportunities before the first observed cryptococcosis diagnosis among kidney transplant recipients in the United States Renal Data System (USRDS). The study links USRDS data on:
+This document is the authoritative specification of the study's scientific objectives, population, definitions, estimands, and statistical methods. It describes what the analysis must accomplish, independently of how the code is organized or implemented. `ARCHITECTURE.md` documents the implementation structure and data flow, while `AGENTS.md` provides instructions and conventions for working with the repository. Neither document supersedes scientific decisions in this analysis plan.
 
-- demographics
-- transplants
-- payer history
-- residence
-- facilities
-- Medicare fee-for-service institutional and physician/supplier (PS) claims
+Reporting will follow STROBE and RECORD [@vonelm2007strobe; @benchimol2015record].
 
-The primary analysis describes encounters in the 90 days before the first observed diagnosis. Secondary analyses examine all-cause mortality and geographic associations.
+## 1. Overview and aims
 
-**Claim types.** Institutional claims include inpatient, outpatient (including emergency department and hospital outpatient services), skilled nursing facility, home health, and hospice claims. Throughout this plan:
+Building on the 90-day inpatient missed-opportunity approach of Salazar et al. [@salazar2020], this retrospective study uses USRDS data linked to Medicare fee-for-service (FFS) institutional and physician/supplier (PS) claims to identify **claims-based potential missed opportunities**, not confirmed diagnostic errors, before the first observed qualifying post-transplant cryptococcosis diagnosis.
 
-- **inpatient claims** means inpatient institutional claims only
-- **outpatient institutional claims** means hospital outpatient and emergency department claims
-- **PS claims** means physician/supplier claims
+**Primary estimand:** Proportion of eligible recipients with at least one qualifying encounter during days −90 through −1, reported for diagnosis-based, procedure-based, and combined opportunities, with Wilson 95% confidence intervals [@wilson1927].
 
-Skilled nursing facility, home health, and hospice claims are not used to identify cases or opportunities. **[TO FINALIZE]** Confirm that exclusion.
+**Secondary objectives:** Associations of any opportunity with 90-day all-cause mortality, and of (separately) ZIP-code RUCA rurality and continuous distance to the transplant center with any opportunity. Additional mortality horizons: 30 and 365 days. Graft outcomes are exploratory only if defensibly ascertained.
 
-## 2. Background and rationale [S2]
+These are observational associations; they do not estimate the causal effect of delay.
 
-Cryptococcosis is a potentially severe infection in kidney transplant recipients. Encounters before diagnosis for neurologic, respiratory, or nonspecific infectious problems, or for related diagnostic procedures, may be identifiable in administrative claims. Published studies of missed opportunities in cryptococcosis are the starting point for the diagnostic phenotype and the 90-day window before diagnosis. This study applies that approach to USRDS institutional and PS claims, and it separates symptom and condition categories newly recorded before diagnosis from those documented earlier.
+## 2. Sources and observation
 
-An encounter that meets the algorithm is a **claims-based potential missed opportunity**, not an adjudicated diagnostic error. Claims cannot establish when symptoms began, cannot show that cryptococcosis was clinically recognizable at that encounter, and cannot measure the true duration of diagnostic delay.
+Use USRDS transplant, treatment, payer, patient, residence, facility and mortality records as applicable; use inpatient and outpatient institutional and PS claims for ascertainment. Institutional files can include inpatient, hospital outpatient, skilled nursing, home health and hospice services [@usrds2025guide]. Skilled nursing facility, home health, and hospice claims are excluded from case and opportunity ascertainment under the prespecified study scope.
 
-**[TO FINALIZE]** Full clinical background citations and bibliographic details of the source studies, including how those studies estimated a baseline or expected rate. **[VERIFY]**
+Determine index-date eligibility from the date range in which claims are complete and the full preceding 365-day eligibility window can be observed. Mortality ascertainment has its own end date and must not be equated to claims availability. Use documentation applicable to the actual SAF release [@usrds2025guide].
 
-## 3. Objectives and estimands [S3, S7]
+ICD-9-CM and ICD-10-CM coding eras are combined in the primary analysis, with separate era-specific sensitivity estimates. For the October 1, 2015 transition, outpatient/professional coding follows service date and hospital inpatient coding follows discharge date [@cms2015transition].
 
-**Primary objective:** Estimate the proportion of eligible recipients with at least one potential missed diagnostic opportunity in days −90 through −1 before the first observed cryptococcosis diagnosis. Report diagnosis-based, procedure-based, and combined opportunities separately. Also describe:
+## 3. Case ascertainment and index
 
-- the number of distinct qualifying encounters
-- the clinical categories involved
-- the time from the earliest qualifying encounter to index
+Cryptococcosis is identified using clinically reviewed diagnosis codes in any qualifying diagnosis position. A confirmed case satisfies either:
+- one inpatient stay with a cryptococcosis code; or
+- two distinct noninpatient encounters (outpatient institutional or PS not belonging to the same inpatient stay), each with a cryptococcosis code, no more than 30 calendar days apart. The one-inpatient/two-noninpatient ascertainment structure follows established Medicare claims methods [@cmsccwalgorithms; @cmshboevaluation]; the 30-day interval is prespecified for this study.
 
-**Secondary objectives:**
+The **confirmation date** is when the criterion is met. The **index date** is the earliest cryptococcosis diagnosis claim belonging to the qualifying episode, bounded to 30 days before confirmation. Do not mistake confirmation date for first observed diagnosis. Earlier isolated codes are characterized separately and subject to the *uniform prior-history exclusion* below; they do not automatically reset index to an arbitrarily earlier date.
 
-1. Estimate the association between having at least one potential missed opportunity and 90-day all-cause mortality.
-2. Estimate the associations of rural versus urban residence, and of continuous distance to the transplant center, with having at least one potential missed opportunity.
+Exclude an otherwise qualifying candidate index if an earlier cryptococcosis diagnosis is observed in the uniformly observable days −365 through −1 **outside the 30-day qualifying episode**. This exclusion also applies to pretransplant codes within that same uniformly observed period. Do not use extra years of uneven historical observation to exclude some patients but not others. The resulting case is a first **observed qualifying diagnosis after a uniform lookback**, not proven incident infection. The fixed 365-day period is a prespecified study choice: independent claims-methods literature demonstrates that washout length changes cohort classification [@washout2015], but does not validate 365 days for cryptococcosis.
 
-**Additional mortality endpoints:** 30-day and 365-day all-cause mortality.
+Keep the single-claim and other alternate case definitions for sensitivity analyses. Final clinical code lists will be available with the study materials.
 
-**Exploratory:** Graft outcomes, if they can be defined defensibly and follow-up is long enough.
+## 4. Eligibility and transplant chronology
 
-The mortality analysis estimates an association. It is not a causal estimate of the effect of diagnostic delay.
+Include USRDS patients with a kidney transplant preceding the cryptococcosis index date (strictly earlier than day 0). Allow early post-transplant cases, retransplant recipients, and recipients with failed grafts or return to dialysis.
 
-## 4. Design and setting [S4, S5]
+Require uninterrupted **Medicare FFS primary Parts A and B (`MPAB`)** coverage for each day −365 through day 0. Exclude Medicare Advantage, secondary, other-payer and uncovered intervals. Broader primary FFS (`MPAB` or `MPO`) eligibility is a sensitivity analysis. USRDS recommends Medicare primary for claims analyses and distinguishes `MPAB` from `MPO`; this study deliberately selects stricter `MPAB` for the primary cohort [@usrds2025guide]. The uniform observation period establishes *recorded history*, not clinical absence.
 
-**Design.** This is a retrospective cohort of kidney transplant recipients with a first observed, confirmed cryptococcosis episode after transplant. Claims before index are used to find potential missed opportunities, and USRDS mortality data after index are used for outcomes. No matched group without cryptococcosis is required for the primary analysis. All eligible cases form its denominator. Section 9 describes the descriptive reference for interpreting the primary proportion.
+Use the **most recent** kidney transplant preceding index to define time since transplant, transplant characteristics and center. For qualifying missed opportunities, encounters after **any first kidney transplant** can contribute, including before retransplantation. Do not count encounters before the first kidney transplant. For recent transplants, report the truncated post-transplant opportunity window; do not infer a full 90-day post-transplant observation window.
 
-**Case accrual period.** The window for case accrual is set by when claims are available, not by fixed calendar years:
+Graft status at index is based on reported transplant follow-up/graft-failure dates, not dialysis claims alone. Include graft failure in the primary cohort and restrict to functioning grafts in sensitivity analysis.
 
-- **Earliest index date:** the first date of available claims plus 365 days. This ensures that the prior-history window (days −365 to −91) and the "first observed" diagnosis are both fully observable.
-- **Latest index date:** the last date with complete claims.
+Residence ZIP and center linkage refer to the index date and relevant transplant episode. Missing geography does not exclude patients from primary proportions or mortality analyses.
 
-**[VERIFY]** The USRDS release, and the first and last dates of complete institutional and PS claims in that release.
+## 5. Prior-history and opportunity windows
 
-**ICD coding eras.** ICD-9-CM applies to services before October 1, 2015. ICD-10-CM and ICD-10-PCS apply to services on or after that date.
+| Period (inclusive) | Purpose |
+|---|---|
+| −365 to −91 | Fixed prior history for diagnostic-category documentation, baseline comorbidity ascertainment and healthcare utilization |
+| −90 to −1 | Primary opportunity window |
+| −60 to −1; −30 to −1 | Nested sensitivity windows, with the same fixed baseline period |
+| 0 | Index cryptococcosis diagnosis |
 
-## 5. Case definition and index date [S6, S7, R6.1, R6.2]
+A diagnosis category is **newly recorded** if no diagnosis in that category was documented during days −365 to −91. Distinct codes within the same category are not new. This does **not** establish symptom onset. Relevant diagnostic procedures need not be new.
 
-**Case-finding codes.** These are ICD-9-CM and ICD-10-CM diagnosis codes for cryptococcosis, in any diagnosis position on the claims used. Section 7 lists the code-list principles.
+Exclude personal-history diagnosis codes from opportunity categories. Use clinically reviewed, era-appropriate exact/prefix coding rules; ICD conversion crosswalks alone do not establish equivalence. Source literature guides phenotype development [@salazar2020]; historical code-system and mapping guidance requires review of the corresponding code sets [@cmsicdarchive].
 
-**Case confirmation.** A recipient is a confirmed case if they have either:
+## 6. Encounter-based opportunity ascertainment
 
-- one inpatient stay with a cryptococcosis diagnosis, or
-- two distinct outpatient encounters with a cryptococcosis diagnosis, no more than 30 calendar days apart. An outpatient encounter here means a PS encounter or an outpatient institutional encounter.
+The counting unit is a **distinct clinical encounter** (inpatient stay, outpatient institutional visit, or PS encounter independent of a stay), not claim lines. PS services during a hospitalization belong to the corresponding stay; multiple claims cannot manufacture distinct confirmation encounters or opportunities.
 
-Several claim lines or claims from the same encounter count as one encounter. Outpatient institutional encounters count toward the two-encounter rule in the same way as PS encounters.
+A qualifying encounter after first transplant and during the selected window contributes when it carries (a) a relevant diagnosis category newly recorded relative to the fixed prior-history period, or (b) a qualifying diagnostic procedure. Encounters meeting both pathways count once in the combined count but can contribute to multiple categories.
 
-**Confirmation date.** The date the confirmation criterion is first met.
+Exclude the entire index-spanning inpatient stay, including associated PS services, from the primary opportunity count. For documented direct transfers, recognize the continuous hospitalization while preserving constituent stays; an earlier transferring hospitalization of **at least seven prediagnosis days** may qualify under the transfer rule [@salazar2020]. Describe prolonged prediagnosis index stays separately. Do not automatically merge a hospitalization after an outpatient index solely because it occurred within a fixed number of days.
 
-**Index date (day 0).** **[TO FINALIZE]** Choose between:
+Report patient-level proportions with explicit patient denominators, distinct qualifying encounters per patient (including zero), clinical categories, and time from the earliest qualifying encounter to index. Do not label elapsed time a measured diagnostic delay.
 
-- **(a) Bounded (recommended):** the earliest cryptococcosis claim no more than N days before the confirmation date. N is [TO FINALIZE; options include 30 days, matching the confirmation window, or 90 days].
-- **(b) Unbounded:** the earliest cryptococcosis claim at any time before confirmation.
+As descriptive context, plot weekly rates of encounters containing relevant diagnosis-category codes across days −365 to −1, *irrespective of newness*, overall and by neurologic, respiratory and infectious group. Do not fit a formal expected-rate comparison or infer a diagnostic threshold from the plot. This descriptive plot is a study-specific addition.
 
-Whichever rule is not chosen becomes a sensitivity analysis. Under (a), a cryptococcosis code more than N days before the confirmation date is handled as follows: **[TO FINALIZE]** treat it as evidence of prior disease and exclude the person; or ignore it; or describe it separately as a possible earlier missed opportunity. This is a clinical judgment.
+## 7. Covariates and baseline utilization
 
-**Validation.** **[VERIFY]** Whether any published study has validated a claims-based case definition of cryptococcosis. If none has, report this as a limitation and rely on the sensitivity analyses in section 12.
+Prespecified mortality covariates: age at index, sex, time since most recent transplant, calendar year, diabetes, HIV, chronic liver disease, and malignancy.
 
-## 6. Participants, selection, and covariates [S6, S8, S13, R6.3, R12.3, R13]
+Document a comorbidity during days −365 through −91 using one inpatient diagnosis or two distinct noninpatient encounters with relevant diagnoses, consistent with the general claims-ascertainment approach [@cmsccwalgorithms]. Otherwise classify it as **not documented**, not clinically absent. Report unknown status separately where ascertainment is impossible.
 
-### 6.1 Selection
+Describe distinct baseline inpatient stays and noninpatient encounters by missed-opportunity status, rurality and distance. Do not adjust mortality or primary geographic models for baseline utilization.
 
-Selection is reported as a participant flowchart, with the number remaining at each step:
+## 8. Mortality analyses
 
-1. All USRDS patients with at least one kidney transplant.
-2. Confirmed cryptococcosis (section 5), with an index date inside the case accrual period (section 4).
-3. **Timing relative to transplant:** Exclude recipients whose first observed cryptococcosis diagnosis came before their first kidney transplant. **[TO FINALIZE]** Whether an isolated, unconfirmed code before transplant is enough to exclude, or whether pretransplant disease must meet the confirmation criterion. Only the first eligible episode per recipient enters the cohort.
-4. **Medicare coverage:** Continuous Medicare fee-for-service primary coverage from day −365 through day 0. Adjacent or overlapping coverage periods are merged. No uncovered days are allowed.
-5. **Chronology:** Exclude recipients with a missing first transplant date, or a recorded death before the index date. **[TO FINALIZE]** Any further chronology rules, such as transplant and index on the same day.
+Follow from index to death, the administrative mortality ascertainment cutoff or the chosen horizon, whichever occurs first. Retain late-index cases and administratively censor them; do not require potential completion of each horizon. Report numbers at risk and follow-up completeness.
 
-Recipients remain eligible whatever their graft function at diagnosis, including those who have returned to dialysis. Graft status is described, and restricting to functioning grafts is a sensitivity analysis. Missing residence or transplant-center location does **not** exclude a recipient from the main cohort or the mortality analysis.
+Report Kaplan–Meier absolute mortality estimates (30, 90 and 365 days) by opportunity status, with 95% confidence intervals. Use a conventional Cox model at 90 days as the preferred adjusted model when estimable. Prespecify penalized Cox regression for unstable sparse-event estimation [@heinze2001] and a simpler reduced model if needed. Do not select model terms based on statistical significance or the observed exposure effect. Weighting remains a separate exploratory approach, not an automatic solution to sparse events or disclosure risk.
 
-**Definition of Medicare primary coverage.** Medicare fee-for-service primary payer, either "for both Part A and Part B" or "for other." The USRDS Researcher's Guide uses this definition for Medicare primary status, and it states that Medicare claims are complete only for Medicare primary enrollees. Medicare Advantage, Medicare-secondary, and non-Medicare periods are not eligible. Because the "for other" category does not guarantee both Part A and Part B, a sensitivity analysis restricts coverage to Part A and Part B together.
+**Unresolved protocol dependency:** objective feasibility thresholds and the precise hierarchy/covariate specification for sparse-comorbidity aggregation, penalization and reduced models must be settled in a tracked issue *before exposure–mortality associations are examined*. This draft does not claim that those criteria have been finalized.
 
-**Transplant reference.** Transplant characteristics and time since transplant come from the most recent kidney transplant before index.
+Assess proportional hazards, influential observations and functional form. Interpret estimates as associations, subject to selection, surveillance and residual confounding.
 
-The first *observed* diagnosis is not necessarily incident disease. Cryptococcosis outside the observable period or payer system cannot be detected.
+## 9. Geographic secondary analyses
 
-### 6.2 Linkage
+Residence is measured by ZIP code at index. Use period-appropriate ZIP-based RUCA primary codes 1–3 (urban/metropolitan) and 4–10 (rural/nonmetropolitan), using the USDA classification [@usdaruca], and straight-line miles from residential ZIP centroid to the **most recent** transplant center. Model distance continuously and report prevalence ratios per 50 miles, checking nonlinearity. Distance is not measured travel time.
 
-Data sources are linked deterministically by the USRDS patient identifier. Linkage rules:
+Fit separate modified Poisson models with robust standard errors [@zou2004] for rurality and distance, respectively, adjusting for the prespecified clinical covariates. Use separate complete-case cohorts for each geographic model; report denominators, exclusions and missingness. Do not adjust for baseline utilization; describe utilization by geography.
 
-- **Residence:** the residence period that contains the index date.
-- **Transplant center:** the center of the most recent transplant before index, with facility information for the matching year.
+## 10. Sensitivity, limitations, reproducibility and disclosure
 
-Each person-date or person-transplant link should produce exactly one match. Overlapping or duplicate records are investigated rather than silently dropped. Report how complete each linkage is and how many links did not produce exactly one match.
+Prespecified sensitivities include nested 30-/60-day opportunity windows; single cryptococcosis claim; inpatient-only case ascertainment; first/principal listed cryptococcosis diagnosis; functioning graft only; broader `MPAB` plus `MPO` coverage; ICD-9-CM and ICD-10-CM eras separately. Report the effect of each sensitivity definition on the denominator and observation period.
 
-### 6.3 Covariates
+Primary study size is determined by eligible claims and deaths; do not assert formally powered contrasts. Report complete-case exclusions for models, without imputing unobserved diagnoses as negative clinical findings.
 
-The principal mortality model uses these covariates:
+Public code and code lists may be shared, but restricted patient-level data may not. Reports must suppress counts 1–10 and values derivable from complementary tables, figures or text, subject to the governing DUA. Weighted/adjusted estimates do not automatically eliminate disclosure risks. Report software and relevant package versions.
 
-- age at index
-- sex
-- time since most recent transplant
-- calendar year
-- four comorbidities: **diabetes mellitus, HIV infection, chronic liver disease, and malignancy**
+## References
 
-**Comorbidity ascertainment.** Each comorbidity is assessed during **days −365 through −91**. It is classified as *documented* if, in that period, either:
-
-- one inpatient stay has a relevant diagnosis in any position, or
-- two distinct outpatient encounters (PS or outpatient institutional) do.
-
-The two encounters can fall anywhere in the period, and they need not carry identical codes if both codes belong to the same comorbidity definition. Otherwise, under continuous coverage, the comorbidity is classified as *not documented*. This does not show clinical absence. *Missing* is reserved for status that is truly unknown or cannot be interpreted.
-
-**Baseline utilization.** The number of distinct inpatient stays and outpatient encounters during days −365 through −91 is described by opportunity status. Utilization is **not** a covariate in the mortality models.
-
-## 7. Diagnosis and procedure phenotype [S8, R7.1, R22.1]
-
-The phenotype uses:
-
-- ICD-9-CM and ICD-10-CM diagnosis codes
-- ICD-9-CM Volume 3 and ICD-10-PCS procedure codes on inpatient claims
-- CPT/HCPCS procedure codes on PS and outpatient institutional claims, where clinically relevant
-
-Code-list principles:
-
-- **The outcome is never a predictor.** Cryptococcosis codes cannot count as symptoms, conditions, or procedures for a missed opportunity.
-- **No personal-history codes.** History codes (for example, history of CNS infection or stroke) show past events, not current symptoms. They are excluded from the opportunity categories. **[TO FINALIZE]** Confirm.
-- **One category per code.** Each code belongs to exactly one clinical category.
-- **Comparable eras.** Each category has ICD-9 and ICD-10 definitions that capture the same clinical concept. Mappings between ICD-9 and ICD-10 need clinical judgment, not only automated crosswalks. A category with no comparable definition in one era is reported by era or dropped.
-- **Stated matching rules.** For each code, the plan states whether it is a category or a billable code and whether it is matched exactly or as a prefix.
-- **Official code sets.** Every code is checked against the official code sets for the years in which it is applied.
-- **Hospital stays across the ICD transition.** For a stay that spans October 1, 2015, the code system is set by the effective date of the claim, not by the admission date alone.
-
-The final code lists for the case definition, comorbidities, and opportunity categories are published as supplementary material, with the matching rules. The lists are finalized without reviewing any results that depend on them.
-
-## 8. Prediagnosis periods [S6, S7]
-
-All times are relative to index day 0.
-
-| Period | Days (inclusive) | Role |
-|---|---|---|
-| Fixed prior history | −365 to −91 | Find which clinical diagnosis categories were already documented; assess baseline comorbidities and utilization |
-| Primary opportunity window | −90 to −1 | Identify potential missed opportunities |
-| Nested sensitivity window | −60 to −1 | Repeat the opportunity analyses in the same cohort |
-| Nested sensitivity window | −30 to −1 | Repeat the opportunity analyses in the same cohort |
-| Index | 0 | First observed cryptococcosis diagnosis (section 5) |
-
-**Rules shared by all windows:**
-
-- All windows use the same eligible cohort and the **same fixed prior-history period**.
-- Prior symptoms are assessed at the *clinical-category* level. A different code in a category already documented does not count as newly recorded.
-- "Newly recorded" is a claims observation, not proof of new clinical onset.
-- Qualifying procedures need **not** be new. They can occur more than once and can count even when a similar procedure was recorded earlier.
-
-**Encounter dates.** An encounter is dated by the date of service. An inpatient stay spans from admission to discharge. A stay that begins before day 0 and continues into it is part of the index episode (section 9), not an opportunity.
-
-## 9. Potential missed-opportunity algorithm [S8, S12a]
-
-**Unit of counting:** Distinct clinical encounters, not claim lines or diagnosis codes. The encounter types are:
-
-- inpatient stays
-- outpatient institutional visits
-- PS encounters
-
-PS services delivered during an inpatient stay belong to that stay. They are not counted as separate encounters.
-
-**Diagnosis-based pathway:** An eligible encounter in the opportunity window has at least one qualifying diagnosis in a clinical category that was **not documented in the fixed −365 to −91 history**.
-
-**Procedure-based pathway:** An eligible encounter has at least one qualifying diagnostic procedure. A procedure in the same category earlier does not disqualify the encounter.
-
-**Combined pathway:** An encounter that meets either definition qualifies. An encounter with several categories or procedures counts **once** in the combined count but contributes to every category and pathway summary that applies. Later separate encounters can also qualify, including repeat procedures or the same category.
-
-**Index diagnostic episode:** The whole index episode is excluded from the opportunity window. This includes:
-
-- the index hospitalization
-- PS services associated with it
-- for a documented direct transfer into the index hospitalization, the transferring and receiving stays together, treated as one continuous episode
-
-Earlier encounters that were separate and complete remain eligible. When the index date comes from an outpatient claim, a hospitalization that begins within **[TO FINALIZE]** days afterward is treated as part of the index episode. A later hospitalization is not automatically treated as the index episode.
-
-**[TO FINALIZE BEFORE IMPLEMENTATION]** Rules for grouping claims into encounters when the claims cannot be linked exactly, and how direct transfers are identified and validated.
-
-**Primary reporting:**
-
-- the proportions of cases with any diagnosis-based, any procedure-based, and any (either type) opportunity
-- the number of distinct opportunities per patient
-- the distribution across categories
-- days from the earliest qualifying opportunity to index
-
-This elapsed time is **not** a clinically measured diagnostic delay. Summarize the nested 30-day and 60-day estimates using the same phenotype and counting rules.
-
-**Descriptive reference for interpretation:** Plot the weekly rate of encounters with any opportunity-category code across days −365 to −1, whether or not the category is newly recorded. Show it overall and by diagnosis group (neurologic, respiratory, infectious). This shows whether and when encounter rates rise above the background level in this population, and gives context for the primary proportion. The plot is descriptive. No change-point threshold is used to redefine the primary estimand. **[TO FINALIZE]** Whether a formal expected-rate comparison is added, following the source studies.
-
-## 10. Study size [S10]
-
-There is no formal sample size calculation. Cohort size is fixed by the available data. Feasibility depends mainly on the number of 90-day deaths for the adjusted mortality model (section 11). Counts are reported subject to the disclosure rules in section 15.
-
-## 11. Mortality outcomes and statistical plan [S7, S12]
-
-**Outcomes.** The principal secondary outcome is **90-day all-cause mortality** after index. Additional outcomes are **30-day and 365-day all-cause mortality**.
-
-**Follow-up.** Follow-up runs from index until the earliest of:
-
-- death
-- the administrative end of death ascertainment
-- the horizon being analyzed
-
-Survival through the outcome window is **not** required for eligibility. Losing Medicare fee-for-service coverage after index does not end follow-up, because USRDS death ascertainment does not depend on Medicare claims. **[VERIFY]** The end date of death ascertainment in the release used, and that it covers the 365-day horizon for the latest index dates.
-
-**Unadjusted estimates.** Kaplan–Meier estimates of absolute mortality risk, with 95% confidence intervals, at each horizon, stratified by any potential missed opportunity.
-
-**Principal adjusted model.**
-
-- A Cox proportional hazards model, with follow-up censored at 90 days.
-- Exposure: any qualifying opportunity during days −90 to −1.
-- Covariates: those listed in section 6.3.
-- Report adjusted hazard ratios with 95% confidence intervals.
-- Check proportional hazards (including Schoenfeld residuals), the functional form of continuous covariates, influential observations, and sparse cells.
-
-**Prespecified fallback model.** If the number of 90-day deaths is below **[TO FINALIZE: e.g., 10]** per model parameter, the principal model is replaced with a reduced model. The reduced model includes the exposure, age at index, and time since transplant. **[TO FINALIZE]** Confirm the reduced covariate set. Covariates are not chosen by p value.
-
-**Sparse covariates.** If a comorbidity is too rare to estimate or report (for example, HIV), it is **[TO FINALIZE: dropped from the model / combined with another immunocompromising condition]**. The decision is made before any model results are viewed. In descriptive tables, its count is suppressed under section 15.
-
-**Interpretation.** Exposure is classified from the window before index and fixed at index, so the risk period begins only after exposure is ascertained. Even so, the associations may be biased by:
-
-- selection on confirmed cryptococcosis
-- survival to index
-- how often patients have encounters
-- earlier care pathways
-
-The models do not adjust for clinical findings first documented in the opportunity window or the index hospitalization as if they were baseline confounders. Adjusted associations do not show that diagnostic delay caused preventable deaths.
-
-**[TO FINALIZE]** Confidence interval methods for the primary proportions and encounter counts.
-
-## 12. Geographic secondary objectives [S7, S12]
-
-Both geographic exposures use the residential ZIP code **at index**. Patients without geographic data remain in the analyses that do not use it.
-
-**Rurality.** Use ZIP-code-based Rural–Urban Commuting Area (RUCA) codes. The primary grouping is urban for primary RUCA codes **1–3** and rural for **4–10**. Assign the RUCA version that applies to the index year, and document:
-
-- the release dates of each version used
-- how versions map onto the study years
-- how ZIP codes were linked
-- how many ZIP codes did not match
-
-**[VERIFY]** The historical RUCA versions and the matching ZIP crosswalks.
-
-**Distance.** Straight-line distance, in miles, from the centroid of the residence ZIP code to the transplant center of the most recent kidney transplant before index. This is not driving distance or travel time. Model distance as continuous, report adjusted prevalence ratios per **50-mile increase**, and check whether the relationship is nonlinear. **[VERIFY]** The historical ZIP centroid data and the source of transplant-center location.
-
-**Models.** For each geographic exposure separately, fit a modified Poisson model with robust standard errors. The outcome is any opportunity in the 90-day window. The models adjust for age, sex, time since most recent transplant, calendar year, diabetes, HIV, chronic liver disease, and malignancy, with the same sparse-covariate rule as section 11 and subject to model diagnostics. Report adjusted prevalence ratios with 95% confidence intervals. Use complete cases for the variables each model needs, and report the denominators and exclusions.
-
-Baseline utilization is not adjusted for in these models, because it may lie on the pathway between geography and documented opportunities. Distance to the transplant center is only an imperfect proxy for where care was received before diagnosis.
-
-## 13. Missing data, bias, and sensitivity analyses [S9, S12c–e, R19.1]
-
-**Missing data.**
-
-- All otherwise eligible patients stay in the descriptive and primary frequency analyses.
-- Adjusted models use complete cases. Report how often each covariate is missing, the sample size of each model, and observed differences between included and excluded records.
-- No imputation is prespecified.
-- Under continuous eligible coverage, the absence of a code is defined as *not documented*. It is not a missing value, and it does not confirm the absence of disease.
-
-**Prespecified sensitivity analyses:**
-
-- the nested 60-day and 30-day windows compared with the primary 90-day window
-- the index-date rule not chosen as primary (section 5)
-- a single cryptococcosis claim instead of the confirmed case definition
-- a case definition using inpatient claims only
-- cryptococcosis as the principal or first-listed diagnosis, instead of any position
-- restriction to recipients with a functioning graft at index
-- Medicare coverage restricted to Part A and Part B together
-- the ICD-9 and ICD-10 eras analyzed separately
-
-Nonspecific symptom categories, and possible long direct-transfer episodes, are examined separately if the code lists and data support those comparisons. Any sensitivity analysis added later is recorded before its results are viewed, or labeled post hoc.
-
-**Selection related to Medicare after transplant.** Medicare entitlement based only on ESRD ends three years after a successful kidney transplant. Recipients who still have Medicare fee-for-service primary coverage later after transplant are therefore mostly older (65 or over) or entitled through disability. The coverage requirement may thus select an older or more disabled cohort among cases diagnosed more than three years after transplant. Report time since transplant and age for confirmed cases excluded for coverage and for those included, subject to disclosure rules.
-
-**Other main threats:**
-
-- left truncation of earlier diagnoses
-- incomplete claims capture under fee-for-service
-- selection by payer and by case confirmation
-- misclassification from the code lists
-- differences between the ICD-9 and ICD-10 eras
-- detection and surveillance bias
-- dates that cannot be distinguished within a hospital stay
-- measurement error in the geographic exposures
-- confounding by severity
-- sparse death counts
-- missing information
-
-None of the algorithms confirms a diagnostic error.
-
-## 14. Data access and reproducibility [R12.1, R12.2, R22.1]
-
-- **Access.** The investigators use USRDS data under a data use agreement and have access to the USRDS files listed in section 1 for the release used.
-- **Data cleaning to report:**
-  - how coverage periods are merged
-  - how claims are grouped into encounters
-  - how duplicate and overlapping records are handled
-  - how code systems are handled across the ICD transition
-- **Reproducibility.** Report the software and package versions used. Analysis code and code lists can be shared publicly. Patient-level USRDS data cannot.
-
-## 15. Disclosure
-
-Follow the USRDS and CMS data use restrictions:
-
-- Do not publish counts from 1 to 10.
-- Do not allow such counts to be derived by subtraction or from complementary cells, in tables, flowcharts, figures, or text.
-
-Check the exact disclosure wording in the governing data use agreement before dissemination.
-
-## 16. Open items
-
-**Required before running the analyses that depend on them:**
-
-- **[VERIFY]**
-  - the data release and the claims date range
-  - the claim types and diagnosis positions available
-  - how index admissions and transfers are identified
-  - historical RUCA data and the ZIP and transplant-center linkage
-  - the end date of mortality follow-up
-  - clinical validation of the code lists
-- **[TO FINALIZE]**
-  - the index-date rule and N (section 5)
-  - handling of isolated codes before transplant (section 6.1)
-  - history codes in the opportunity categories (section 7)
-  - the window linking an outpatient index to a later hospitalization (section 9)
-  - the fallback model threshold and covariates (section 11)
-  - handling of sparse comorbidities (section 11)
-  - confidence interval methods (section 11)
-  - whether a formal expected-rate comparison is added (section 9)
+References are stored in root-level `references.bib`. Rendering is deferred.

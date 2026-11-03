@@ -1,34 +1,41 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+<!-- badges: start -->
+
+[![Status](https://img.shields.io/badge/status-preliminary_analysis-yellow)](#)
+[![Methods](https://img.shields.io/badge/methods-under_development-blue)](#)
+[![Not for
+Citation](https://img.shields.io/badge/use-not_for_citation-lightgrey)](#)
+<!-- [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE.md) -->
+<!-- badges: end -->
 
 # Cryptococcus missed diagnosis USRDS
 
-<!-- badges: start -->
+The goal of this analysis is to estimate how often kidney transplant
+recipients with cryptococcosis had earlier health care encounters that
+may have been missed opportunities for diagnosis. It uses the United
+States Renal Data System (USRDS) and its linked Medicare claims.
 
-<!-- badges: end -->
+This analysis is currently in progress.
 
-The goal of Cryptococcus missed diagnosis USRDS is to …
+<!-- Website: restore when the site is published (setup step 3).
+The full analysis website, which explains the code step by step, is available at:
+https://vagishhemmige.github.io/Cryptococcus-missed-diagnosis-USRDS/
+-->
 
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
+## Documentation
 
-``` r
-summary(cars)
-#>      speed           dist       
-#>  Min.   : 4.0   Min.   :  2.00  
-#>  1st Qu.:12.0   1st Qu.: 26.00  
-#>  Median :15.0   Median : 36.00  
-#>  Mean   :15.4   Mean   : 42.98  
-#>  3rd Qu.:19.0   3rd Qu.: 56.00  
-#>  Max.   :25.0   Max.   :120.00
-```
+- [`analysis-plan.md`](analysis-plan.md): what the analysis is meant to
+  do
+- [`ARCHITECTURE.md`](ARCHITECTURE.md): how the code is organized
+- [`AGENTS.md`](AGENTS.md): how to work in this repository
+- [Issues](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/issues):
+  open decisions and known gaps
 
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date.
+## Running the analysis
 
-You can also embed plots, for example:
+Run `R/main.R` from the project root. It requires authorized access to
+the USRDS files, located through the
+[usRds](https://vagishhemmige.github.io/usRds/) package.
 
-![](README_files/figure-gfm/pressure-1.png)<!-- -->
-
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub.
+<!-- Results: add only when the figures and tables are cleared for public release. -->

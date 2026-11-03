@@ -26,8 +26,10 @@ The goal of this analysis is to estimate how often kidney transplant recipients 
 
 This analysis is currently in progress.
 
+<!-- Website: restore when the site is published (setup step 3).
 The full analysis website, which explains the code step by step, is available at:
 https://vagishhemmige.github.io/Cryptococcus-missed-diagnosis-USRDS/
+-->
 
 ## Documentation
 

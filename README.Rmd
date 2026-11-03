@@ -1,5 +1,7 @@
 ---
-output: github_document
+output:
+  github_document:
+    html_preview: false
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -11,25 +13,31 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Cryptococcus missed diagnosis USRDS
-
 <!-- badges: start -->
+[![Status](https://img.shields.io/badge/status-preliminary_analysis-yellow)](#)
+[![Methods](https://img.shields.io/badge/methods-under_development-blue)](#)
+[![Not for Citation](https://img.shields.io/badge/use-not_for_citation-lightgrey)](#)
+<!-- [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE.md) -->
 <!-- badges: end -->
 
-The goal of Cryptococcus missed diagnosis USRDS is to ...
+# Cryptococcus missed diagnosis USRDS
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+The goal of this analysis is to estimate how often kidney transplant recipients with cryptococcosis had earlier health care encounters that may have been missed opportunities for diagnosis. It uses the United States Renal Data System (USRDS) and its linked Medicare claims.
 
-```{r cars}
-summary(cars)
-```
+This analysis is currently in progress.
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date.
+The full analysis website, which explains the code step by step, is available at:
+https://vagishhemmige.github.io/Cryptococcus-missed-diagnosis-USRDS/
 
-You can also embed plots, for example:
+## Documentation
 
-```{r pressure, echo = FALSE}
-plot(pressure)
-```
+- [`analysis-plan.md`](analysis-plan.md): what the analysis is meant to do
+- [`ARCHITECTURE.md`](ARCHITECTURE.md): how the code is organized
+- [`AGENTS.md`](AGENTS.md): how to work in this repository
+- [Issues](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/issues): open decisions and known gaps
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub.
+## Running the analysis
+
+Run `R/main.R` from the project root. It requires authorized access to the USRDS files, located through the [usRds](https://vagishhemmige.github.io/usRds/) package.
+
+<!-- Results: add only when the figures and tables are cleared for public release. -->

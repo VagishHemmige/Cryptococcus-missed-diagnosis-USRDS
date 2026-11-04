@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Vagish Hemmige">
+
+<title>Analysis plan – Cryptococcus missed diagnosis</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../quarto/architecture.html" rel="next">
+<link href="../quarto/figures.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-66ae90e4418e9d0ac3caa4b8c3bef75c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/issue-comments-0.3.0/issue-comments.js"></script>
+<link href="../site_libs/quarto-contrib/issue-comments-0.3.0/issue-comments.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+div.callout-Pending.callout {
+  border-left-color: #f0c400;
+}
+div.callout-Pending.callout-style-default > .callout-header {
+  background-color: rgba(240, 196, 0, 0.13);
+}
+div.callout-Pending .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
+div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pending.callout-titled .callout-icon::before {
+  content: '⏳';
+  background-image: none;
+}
+div.callout-Rcode.callout {
+  border-left-color: #d63384;
+}
+div.callout-Rcode.callout-style-default > .callout-header {
+  background-color: rgba(214, 51, 132, 0.13);
+}
+div.callout-Rcode .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
+div.callout-Rcode.callout-style-default .callout-icon::before, div.callout-Rcode.callout-titled .callout-icon::before {
+  content: '💻';
+  background-image: none;
+}
+div.callout-Results.callout {
+  border-left-color: #198754;
+}
+div.callout-Results.callout-style-default > .callout-header {
+  background-color: rgba(25, 135, 84, 0.13);
+}
+div.callout-Results .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
+div.callout-Results.callout-style-default .callout-icon::before, div.callout-Results.callout-titled .callout-icon::before {
+  content: '📊';
+  background-image: none;
+}
+</style>
+<script>window.ISSUE_COMMENTS = {"contact":"mailto:vagish.hemmige@gmail.com","endpoint":"https://script.google.com/macros/s/AKfycbyE8fNBvy3vfuAnuQqdjpCTR8i2zYI-KSvGzhkGlQRYevI1I6auqq9H-mIk2yrXCaIROA/exec","owner":"Vagish Hemmige","pageButton":false,"passcode":true,"preview":true};</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../quarto/analysis-plan.html">Project documents</a></li><li class="breadcrumb-item"><a href="../quarto/analysis-plan.html">Analysis plan</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Cryptococcus missed diagnosis</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><i class="bi bi-house" role="img">
+</i> 
+ <span class="menu-text">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Code</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Setup and helper functions</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../quarto/setup.html" class="sidebar-item-text sidebar-link"><i class="bi bi-laptop" role="img">
+</i> 
+ <span class="menu-text">Setup</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data processing and analysis</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../quarto/create_cohort.html" class="sidebar-item-text sidebar-link"><i class="bi bi-laptop" role="img">
+</i> 
+ <span class="menu-text">1. Create cohort</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Tables and figures</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../quarto/figures.html" class="sidebar-item-text sidebar-link"><i class="bi bi-laptop" role="img">
+</i> 
+ <span class="menu-text">Figures</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Project documents</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../quarto/analysis-plan.html" class="sidebar-item-text sidebar-link active"><i class="bi bi-file-earmark-ruled" role="img">
+</i> 
+ <span class="menu-text">Analysis plan</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../quarto/architecture.html" class="sidebar-item-text sidebar-link"><i class="bi bi-file-earmark-ruled" role="img">
+</i> 
+ <span class="menu-text">Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../quarto/agents.html" class="sidebar-item-text sidebar-link"><i class="bi bi-file-earmark-ruled" role="img">
+</i> 
+ <span class="menu-text">AGENTS.md</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../quarto/repository-blueprint.html" class="sidebar-item-text sidebar-link"><i class="bi bi-file-earmark-ruled" role="img">
+</i> 
+ <span class="menu-text">Repository blueprint</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../quarto/about.html" class="sidebar-item-text sidebar-link"><i class="bi bi-info-circle" role="img">
+</i> 
+ <span class="menu-text">About</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#analysis-plan-potential-missed-opportunities-for-diagnosis-of-cryptococcosis-among-kidney-transplant-recipients-using-usrds" id="toc-analysis-plan-potential-missed-opportunities-for-diagnosis-of-cryptococcosis-among-kidney-transplant-recipients-using-usrds" class="nav-link active" data-scroll-target="#analysis-plan-potential-missed-opportunities-for-diagnosis-of-cryptococcosis-among-kidney-transplant-recipients-using-usrds">Analysis plan: Potential missed opportunities for diagnosis of cryptococcosis among kidney transplant recipients using USRDS</a>
+  <ul class="collapse">
+  <li><a href="#scope-and-reporting-framework" id="toc-scope-and-reporting-framework" class="nav-link" data-scroll-target="#scope-and-reporting-framework">Scope and reporting framework</a></li>
+  <li><a href="#1-overview-and-aims" id="toc-1-overview-and-aims" class="nav-link" data-scroll-target="#1-overview-and-aims">1. Overview and aims</a></li>
+  <li><a href="#2-sources-and-observation" id="toc-2-sources-and-observation" class="nav-link" data-scroll-target="#2-sources-and-observation">2. Sources and observation</a></li>
+  <li><a href="#3-case-ascertainment-and-index" id="toc-3-case-ascertainment-and-index" class="nav-link" data-scroll-target="#3-case-ascertainment-and-index">3. Case ascertainment and index</a></li>
+  <li><a href="#4-eligibility-and-transplant-chronology" id="toc-4-eligibility-and-transplant-chronology" class="nav-link" data-scroll-target="#4-eligibility-and-transplant-chronology">4. Eligibility and transplant chronology</a></li>
+  <li><a href="#5-prior-history-and-opportunity-windows" id="toc-5-prior-history-and-opportunity-windows" class="nav-link" data-scroll-target="#5-prior-history-and-opportunity-windows">5. Prior-history and opportunity windows</a></li>
+  <li><a href="#6-encounter-based-opportunity-ascertainment" id="toc-6-encounter-based-opportunity-ascertainment" class="nav-link" data-scroll-target="#6-encounter-based-opportunity-ascertainment">6. Encounter-based opportunity ascertainment</a></li>
+  <li><a href="#7-covariates-and-baseline-utilization" id="toc-7-covariates-and-baseline-utilization" class="nav-link" data-scroll-target="#7-covariates-and-baseline-utilization">7. Covariates and baseline utilization</a></li>
+  <li><a href="#8-mortality-analyses" id="toc-8-mortality-analyses" class="nav-link" data-scroll-target="#8-mortality-analyses">8. Mortality analyses</a></li>
+  <li><a href="#9-geographic-secondary-analyses" id="toc-9-geographic-secondary-analyses" class="nav-link" data-scroll-target="#9-geographic-secondary-analyses">9. Geographic secondary analyses</a></li>
+  <li><a href="#10-sensitivity-limitations-reproducibility-and-disclosure" id="toc-10-sensitivity-limitations-reproducibility-and-disclosure" class="nav-link" data-scroll-target="#10-sensitivity-limitations-reproducibility-and-disclosure">10. Sensitivity, limitations, reproducibility and disclosure</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/edit/master/quarto/analysis-plan.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-body" id="quarto-document-content"><div class="quarto-title-block"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../quarto/analysis-plan.html">Project documents</a></li><li class="breadcrumb-item"><a href="../quarto/analysis-plan.html">Analysis plan</a></li></ol></nav><div class="quarto-title-tools-only"><h1></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+</div>
+
+
+
+<div class="quarto-title-meta column-body">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Vagish Hemmige <a href="mailto:vagish.hemmige@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!--
+This page only shows analysis-plan.md from the repository root, which is the one source:
+edit that file, not this page. Its first heading is the page title.
+
+The plan links its own sections GitHub's way (for example #3-design). Quarto's
+default heading IDs drop leading numbers (#design), so `from:` above
+gives this page GitHub-style IDs and those links work on both.
+-->
+<section id="analysis-plan-potential-missed-opportunities-for-diagnosis-of-cryptococcosis-among-kidney-transplant-recipients-using-usrds" class="level1">
+<h1>Analysis plan: Potential missed opportunities for diagnosis of cryptococcosis among kidney transplant recipients using USRDS</h1>
+<p><strong>Status:</strong> Reconciled proposal, 25 October 2026; not yet adopted. Citations support relevant methodological precedents but do not validate this study’s claims algorithms.</p>
+<section id="scope-and-reporting-framework" class="level2">
+<h2 class="anchored" data-anchor-id="scope-and-reporting-framework">Scope and reporting framework</h2>
+<p>This document is the authoritative specification of the study’s scientific objectives, population, definitions, estimands, and statistical methods. It describes what the analysis must accomplish, independently of how the code is organized or implemented. <code>ARCHITECTURE.md</code> documents the implementation structure and data flow, while <code>AGENTS.md</code> provides instructions and conventions for working with the repository. Neither document supersedes scientific decisions in this analysis plan.</p>
+<p>Reporting will follow STROBE and RECORD<span class="citation" data-cites="vonelm2007strobe benchimol2015record"><sup><a href="#ref-vonelm2007strobe" role="doc-biblioref">1</a>,<a href="#ref-benchimol2015record" role="doc-biblioref">2</a></sup></span>.</p>
+</section>
+<section id="1-overview-and-aims" class="level2">
+<h2 class="anchored" data-anchor-id="1-overview-and-aims">1. Overview and aims</h2>
+<p>Building on the 90-day inpatient missed-opportunity approach of Salazar et al.<span class="citation" data-cites="salazar2020"><sup><a href="#ref-salazar2020" role="doc-biblioref">3</a></sup></span>, this retrospective study uses USRDS data linked to Medicare fee-for-service (FFS) institutional and physician/supplier (PS) claims to identify <strong>claims-based potential missed opportunities</strong>, not confirmed diagnostic errors, before the first observed qualifying post-transplant cryptococcosis diagnosis.</p>
+<p><strong>Primary estimand:</strong> Proportion of eligible recipients with at least one qualifying encounter during days −90 through −1, reported for diagnosis-based, procedure-based, and combined opportunities, with Wilson 95% confidence intervals<span class="citation" data-cites="wilson1927"><sup><a href="#ref-wilson1927" role="doc-biblioref">4</a></sup></span>.</p>
+<p><strong>Secondary objectives:</strong> Associations of any opportunity with 90-day all-cause mortality, and of (separately) ZIP-code RUCA rurality and continuous distance to the transplant center with any opportunity. Additional mortality horizons: 30 and 365 days. Graft outcomes are exploratory only if defensibly ascertained.</p>
+<p>These are observational associations; they do not estimate the causal effect of delay.</p>
+</section>
+<section id="2-sources-and-observation" class="level2">
+<h2 class="anchored" data-anchor-id="2-sources-and-observation">2. Sources and observation</h2>
+<p>Use USRDS transplant, treatment, payer, patient, residence, facility and mortality records as applicable; use inpatient and outpatient institutional and PS claims for ascertainment. Institutional files can include inpatient, hospital outpatient, skilled nursing, home health and hospice services<span class="citation" data-cites="usrds2025guide"><sup><a href="#ref-usrds2025guide" role="doc-biblioref">5</a></sup></span>. Skilled nursing facility, home health, and hospice claims are excluded from case and opportunity ascertainment under the prespecified study scope.</p>
+<p>Determine index-date eligibility from the date range in which claims are complete and the full preceding 365-day eligibility window can be observed. Mortality ascertainment has its own end date and must not be equated to claims availability. Use documentation applicable to the actual SAF release<span class="citation" data-cites="usrds2025guide"><sup><a href="#ref-usrds2025guide" role="doc-biblioref">5</a></sup></span>.</p>
+<p>ICD-9-CM and ICD-10-CM coding eras are combined in the primary analysis, with separate era-specific sensitivity estimates. For the October 1, 2015 transition, outpatient/professional coding follows service date and hospital inpatient coding follows discharge date<span class="citation" data-cites="cms2015transition"><sup><a href="#ref-cms2015transition" role="doc-biblioref">6</a></sup></span>.</p>
+</section>
+<section id="3-case-ascertainment-and-index" class="level2">
+<h2 class="anchored" data-anchor-id="3-case-ascertainment-and-index">3. Case ascertainment and index</h2>
+<p>Cryptococcosis is identified using clinically reviewed diagnosis codes in any qualifying diagnosis position. A confirmed case satisfies either: - one inpatient stay with a cryptococcosis code; or - two distinct noninpatient encounters (outpatient institutional or PS not belonging to the same inpatient stay), each with a cryptococcosis code, no more than 30 calendar days apart. The one-inpatient/two-noninpatient ascertainment structure follows established Medicare claims methods<span class="citation" data-cites="cmsccwalgorithms cmshboevaluation"><sup><a href="#ref-cmsccwalgorithms" role="doc-biblioref">7</a>,<a href="#ref-cmshboevaluation" role="doc-biblioref">8</a></sup></span>; the 30-day interval is prespecified for this study.</p>
+<p>The <strong>confirmation date</strong> is when the criterion is met. The <strong>index date</strong> is the earliest cryptococcosis diagnosis claim belonging to the qualifying episode, bounded to 30 days before confirmation. Do not mistake confirmation date for first observed diagnosis. Earlier isolated codes are characterized separately and subject to the <em>uniform prior-history exclusion</em> below; they do not automatically reset index to an arbitrarily earlier date.</p>
+<p>Exclude an otherwise qualifying candidate index if an earlier cryptococcosis diagnosis is observed in the uniformly observable days −365 through −1 <strong>outside the 30-day qualifying episode</strong>. This exclusion also applies to pretransplant codes within that same uniformly observed period. Do not use extra years of uneven historical observation to exclude some patients but not others. The resulting case is a first <strong>observed qualifying diagnosis after a uniform lookback</strong>, not proven incident infection. The fixed 365-day period is a prespecified study choice: independent claims-methods literature demonstrates that washout length changes cohort classification<span class="citation" data-cites="washout2015"><sup><a href="#ref-washout2015" role="doc-biblioref">9</a></sup></span>, but does not validate 365 days for cryptococcosis.</p>
+<p>Keep the single-claim and other alternate case definitions for sensitivity analyses. Final clinical code lists will be available with the study materials.</p>
+</section>
+<section id="4-eligibility-and-transplant-chronology" class="level2">
+<h2 class="anchored" data-anchor-id="4-eligibility-and-transplant-chronology">4. Eligibility and transplant chronology</h2>
+<p>Include USRDS patients with a kidney transplant preceding the cryptococcosis index date (strictly earlier than day 0). Allow early post-transplant cases, retransplant recipients, and recipients with failed grafts or return to dialysis.</p>
+<p>Require uninterrupted <strong>Medicare FFS primary Parts A and B (<code>MPAB</code>)</strong> coverage for each day −365 through day 0. Exclude Medicare Advantage, secondary, other-payer and uncovered intervals. Broader primary FFS (<code>MPAB</code> or <code>MPO</code>) eligibility is a sensitivity analysis. USRDS recommends Medicare primary for claims analyses and distinguishes <code>MPAB</code> from <code>MPO</code>; this study deliberately selects stricter <code>MPAB</code> for the primary cohort<span class="citation" data-cites="usrds2025guide"><sup><a href="#ref-usrds2025guide" role="doc-biblioref">5</a></sup></span>. The uniform observation period establishes <em>recorded history</em>, not clinical absence.</p>
+<p>Use the <strong>most recent</strong> kidney transplant preceding index to define time since transplant, transplant characteristics and center. For qualifying missed opportunities, encounters after <strong>any first kidney transplant</strong> can contribute, including before retransplantation. Do not count encounters before the first kidney transplant. For recent transplants, report the truncated post-transplant opportunity window; do not infer a full 90-day post-transplant observation window.</p>
+<p>Graft status at index is based on reported transplant follow-up/graft-failure dates, not dialysis claims alone. Include graft failure in the primary cohort and restrict to functioning grafts in sensitivity analysis.</p>
+<p>Residence ZIP and center linkage refer to the index date and relevant transplant episode. Missing geography does not exclude patients from primary proportions or mortality analyses.</p>
+</section>
+<section id="5-prior-history-and-opportunity-windows" class="level2">
+<h2 class="anchored" data-anchor-id="5-prior-history-and-opportunity-windows">5. Prior-history and opportunity windows</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Period (inclusive)</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>−365 to −91</td>
+<td>Fixed prior history for diagnostic-category documentation, baseline comorbidity ascertainment and healthcare utilization</td>
+</tr>
+<tr class="even">
+<td>−90 to −1</td>
+<td>Primary opportunity window</td>
+</tr>
+<tr class="odd">
+<td>−60 to −1; −30 to −1</td>
+<td>Nested sensitivity windows, with the same fixed baseline period</td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td>Index cryptococcosis diagnosis</td>
+</tr>
+</tbody>
+</table>
+<p>A diagnosis category is <strong>newly recorded</strong> if no diagnosis in that category was documented during days −365 to −91. Distinct codes within the same category are not new. This does <strong>not</strong> establish symptom onset. Relevant diagnostic procedures need not be new.</p>
+<p>Exclude personal-history diagnosis codes from opportunity categories. Use clinically reviewed, era-appropriate exact/prefix coding rules; ICD conversion crosswalks alone do not establish equivalence. Source literature guides phenotype development<span class="citation" data-cites="salazar2020"><sup><a href="#ref-salazar2020" role="doc-biblioref">3</a></sup></span>; historical code-system and mapping guidance requires review of the corresponding code sets<span class="citation" data-cites="cmsicdarchive"><sup><a href="#ref-cmsicdarchive" role="doc-biblioref">10</a></sup></span>.</p>
+</section>
+<section id="6-encounter-based-opportunity-ascertainment" class="level2">
+<h2 class="anchored" data-anchor-id="6-encounter-based-opportunity-ascertainment">6. Encounter-based opportunity ascertainment</h2>
+<p>The counting unit is a <strong>distinct clinical encounter</strong> (inpatient stay, outpatient institutional visit, or PS encounter independent of a stay), not claim lines. PS services during a hospitalization belong to the corresponding stay; multiple claims cannot manufacture distinct confirmation encounters or opportunities.</p>
+<p>A qualifying encounter after first transplant and during the selected window contributes when it carries (a) a relevant diagnosis category newly recorded relative to the fixed prior-history period, or (b) a qualifying diagnostic procedure. Encounters meeting both pathways count once in the combined count but can contribute to multiple categories.</p>
+<p>Exclude the entire index-spanning inpatient stay, including associated PS services, from the primary opportunity count. For documented direct transfers, recognize the continuous hospitalization while preserving constituent stays; an earlier transferring hospitalization of <strong>at least seven prediagnosis days</strong> may qualify under the transfer rule<span class="citation" data-cites="salazar2020"><sup><a href="#ref-salazar2020" role="doc-biblioref">3</a></sup></span>. Describe prolonged prediagnosis index stays separately. Do not automatically merge a hospitalization after an outpatient index solely because it occurred within a fixed number of days.</p>
+<p>Report patient-level proportions with explicit patient denominators, distinct qualifying encounters per patient (including zero), clinical categories, and time from the earliest qualifying encounter to index. Do not label elapsed time a measured diagnostic delay.</p>
+<p>As descriptive context, plot weekly rates of encounters containing relevant diagnosis-category codes across days −365 to −1, <em>irrespective of newness</em>, overall and by neurologic, respiratory and infectious group. Do not fit a formal expected-rate comparison or infer a diagnostic threshold from the plot. This descriptive plot is a study-specific addition.</p>
+</section>
+<section id="7-covariates-and-baseline-utilization" class="level2">
+<h2 class="anchored" data-anchor-id="7-covariates-and-baseline-utilization">7. Covariates and baseline utilization</h2>
+<p>Prespecified mortality covariates: age at index, sex, time since most recent transplant, calendar year, diabetes, HIV, chronic liver disease, and malignancy.</p>
+<p>Document a comorbidity during days −365 through −91 using one inpatient diagnosis or two distinct noninpatient encounters with relevant diagnoses, consistent with the general claims-ascertainment approach<span class="citation" data-cites="cmsccwalgorithms"><sup><a href="#ref-cmsccwalgorithms" role="doc-biblioref">7</a></sup></span>. Otherwise classify it as <strong>not documented</strong>, not clinically absent. Report unknown status separately where ascertainment is impossible.</p>
+<p>Describe distinct baseline inpatient stays and noninpatient encounters by missed-opportunity status, rurality and distance. Do not adjust mortality or primary geographic models for baseline utilization.</p>
+</section>
+<section id="8-mortality-analyses" class="level2">
+<h2 class="anchored" data-anchor-id="8-mortality-analyses">8. Mortality analyses</h2>
+<p>Follow from index to death, the administrative mortality ascertainment cutoff or the chosen horizon, whichever occurs first. Retain late-index cases and administratively censor them; do not require potential completion of each horizon. Report numbers at risk and follow-up completeness.</p>
+<p>Report Kaplan–Meier absolute mortality estimates (30, 90 and 365 days) by opportunity status, with 95% confidence intervals. Use a conventional Cox model at 90 days as the preferred adjusted model when estimable. Prespecify penalized Cox regression for unstable sparse-event estimation<span class="citation" data-cites="heinze2001"><sup><a href="#ref-heinze2001" role="doc-biblioref">11</a></sup></span> and a simpler reduced model if needed. Do not select model terms based on statistical significance or the observed exposure effect. Weighting remains a separate exploratory approach, not an automatic solution to sparse events or disclosure risk.</p>
+<p><strong>Unresolved protocol dependency:</strong> objective feasibility thresholds and the precise hierarchy/covariate specification for sparse-comorbidity aggregation, penalization and reduced models must be settled in a tracked issue <em>before exposure–mortality associations are examined</em>. This draft does not claim that those criteria have been finalized.</p>
+<p>Assess proportional hazards, influential observations and functional form. Interpret estimates as associations, subject to selection, surveillance and residual confounding.</p>
+</section>
+<section id="9-geographic-secondary-analyses" class="level2">
+<h2 class="anchored" data-anchor-id="9-geographic-secondary-analyses">9. Geographic secondary analyses</h2>
+<p>Residence is measured by ZIP code at index. Use period-appropriate ZIP-based RUCA primary codes 1–3 (urban/metropolitan) and 4–10 (rural/nonmetropolitan), using the USDA classification<span class="citation" data-cites="usdaruca"><sup><a href="#ref-usdaruca" role="doc-biblioref">12</a></sup></span>, and straight-line miles from residential ZIP centroid to the <strong>most recent</strong> transplant center. Model distance continuously and report prevalence ratios per 50 miles, checking nonlinearity. Distance is not measured travel time.</p>
+<p>Fit separate modified Poisson models with robust standard errors<span class="citation" data-cites="zou2004"><sup><a href="#ref-zou2004" role="doc-biblioref">13</a></sup></span> for rurality and distance, respectively, adjusting for the prespecified clinical covariates. Use separate complete-case cohorts for each geographic model; report denominators, exclusions and missingness. Do not adjust for baseline utilization; describe utilization by geography.</p>
+</section>
+<section id="10-sensitivity-limitations-reproducibility-and-disclosure" class="level2">
+<h2 class="anchored" data-anchor-id="10-sensitivity-limitations-reproducibility-and-disclosure">10. Sensitivity, limitations, reproducibility and disclosure</h2>
+<p>Prespecified sensitivities include nested 30-/60-day opportunity windows; single cryptococcosis claim; inpatient-only case ascertainment; first/principal listed cryptococcosis diagnosis; functioning graft only; broader <code>MPAB</code> plus <code>MPO</code> coverage; ICD-9-CM and ICD-10-CM eras separately. Report the effect of each sensitivity definition on the denominator and observation period.</p>
+<p>Primary study size is determined by eligible claims and deaths; do not assert formally powered contrasts. Report complete-case exclusions for models, without imputing unobserved diagnoses as negative clinical findings.</p>
+<p>Public code and code lists may be shared, but restricted patient-level data may not. Reports must suppress counts 1–10 and values derivable from complementary tables, figures or text, subject to the governing DUA. Weighted/adjusted estimates do not automatically eliminate disclosure risks. Report software and relevant package versions.</p>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<p>References are stored in root-level <code>references.bib</code>. Rendering is deferred.</p>
+
+
+<!-- -->
+
+
+</section>
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body" role="list">
+<div id="ref-vonelm2007strobe" class="csl-entry" role="listitem">
+<div class="csl-left-margin">1. </div><div class="csl-right-inline">Elm E von, Altman DG, Egger M, Pocock SJ, Gøtzsche PC, Vandenbroucke JP. The strengthening the reporting of observational studies in epidemiology (<span>STROBE</span>) statement: Guidelines for reporting observational studies. <em>The Lancet</em>. 2007;370(9596):1453-1457. doi:<a href="https://doi.org/10.1016/S0140-6736(07)61602-X">10.1016/S0140-6736(07)61602-X</a></div>
+</div>
+<div id="ref-benchimol2015record" class="csl-entry" role="listitem">
+<div class="csl-left-margin">2. </div><div class="csl-right-inline">Benchimol EI, Smeeth L, Guttmann A, et al. The <span>REporting</span> of studies conducted using observational routinely-collected health data (<span>RECORD</span>) statement. <em>PLOS Medicine</em>. 2015;12(10):e1001885. doi:<a href="https://doi.org/10.1371/journal.pmed.1001885">10.1371/journal.pmed.1001885</a></div>
+</div>
+<div id="ref-salazar2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">3. </div><div class="csl-right-inline">Salazar AS, Keller MR, Olsen MA, et al. Potential missed opportunities for diagnosis of cryptococcosis and the association with mortality: A cohort study. <em>eClinicalMedicine</em>. 2020;27:100563. doi:<a href="https://doi.org/10.1016/j.eclinm.2020.100563">10.1016/j.eclinm.2020.100563</a></div>
+</div>
+<div id="ref-wilson1927" class="csl-entry" role="listitem">
+<div class="csl-left-margin">4. </div><div class="csl-right-inline">Wilson EB. Probable inference, the law of succession, and statistical inference. <em>Journal of the American Statistical Association</em>. 1927;22(158):209-212. doi:<a href="https://doi.org/10.1080/01621459.1927.10502953">10.1080/01621459.1927.10502953</a></div>
+</div>
+<div id="ref-usrds2025guide" class="csl-entry" role="listitem">
+<div class="csl-left-margin">5. </div><div class="csl-right-inline">United States Renal Data System. 2025 researcher’s guide to the USRDS database. Published online 2025. <a href="https://www.niddk.nih.gov/about-niddk/strategic-plans-reports/usrds/for-researchers/researchers-guide">https://www.niddk.nih.gov/about-niddk/strategic-plans-reports/usrds/for-researchers/researchers-guide</a></div>
+</div>
+<div id="ref-cms2015transition" class="csl-entry" role="listitem">
+<div class="csl-left-margin">6. </div><div class="csl-right-inline">Centers for Medicare and Medicaid Services. Coding around the compliance date. Published online 2015. <a href="https://www.cms.gov/medicare/coding/icd10/downloads/icd10listservcodingaroundcompliancedate.pdf">https://www.cms.gov/medicare/coding/icd10/downloads/icd10listservcodingaroundcompliancedate.pdf</a></div>
+</div>
+<div id="ref-cmsccwalgorithms" class="csl-entry" role="listitem">
+<div class="csl-left-margin">7. </div><div class="csl-right-inline">Chronic Conditions Warehouse. 30 <span>CCW</span> chronic conditions algorithms. Published online 2025. <a href="https://www2.ccwdata.org/documents/10280/19139421/chr-chronic-condition-algorithms.pdf">https://www2.ccwdata.org/documents/10280/19139421/chr-chronic-condition-algorithms.pdf</a></div>
+</div>
+<div id="ref-cmshboevaluation" class="csl-entry" role="listitem">
+<div class="csl-left-margin">8. </div><div class="csl-right-inline">Mathematica Policy Research. <em>Evaluation of the Medicare Prior Authorization Model for Hyperbaric Oxygen Therapy: Final Report</em>. Centers for Medicare; Medicaid Services. <a href="https://www.cms.gov/priorities/innovation/files/reports/mpa-hbo-fnlevalrpt.pdf">https://www.cms.gov/priorities/innovation/files/reports/mpa-hbo-fnlevalrpt.pdf</a></div>
+</div>
+<div id="ref-washout2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">9. </div><div class="csl-right-inline">Roberts AW, Dusetzina SB, Farley JF. Revisiting the washout period in the incident user study design: Why 6–12 months may not be sufficient. <em>Journal of Comparative Effectiveness Research</em>. 2015;4:1. doi:<a href="https://doi.org/10.2217/cer.14.53">10.2217/cer.14.53</a></div>
+</div>
+<div id="ref-cmsicdarchive" class="csl-entry" role="listitem">
+<div class="csl-left-margin">10. </div><div class="csl-right-inline">Centers for Medicare and Medicaid Services. <span>ICD-10</span> files and news archive. <a href="https://www.cms.gov/medicare/coding-billing/icd-10-codes/icd-10-cm-icd-10-pcs-gem-archive">https://www.cms.gov/medicare/coding-billing/icd-10-codes/icd-10-cm-icd-10-pcs-gem-archive</a></div>
+</div>
+<div id="ref-heinze2001" class="csl-entry" role="listitem">
+<div class="csl-left-margin">11. </div><div class="csl-right-inline">Heinze G, Schemper M. A solution to the problem of monotone likelihood in cox regression. <em>Biometrics</em>. 2001;57(1):114-119. doi:<a href="https://doi.org/10.1111/j.0006-341x.2001.00114.x">10.1111/j.0006-341x.2001.00114.x</a></div>
+</div>
+<div id="ref-usdaruca" class="csl-entry" role="listitem">
+<div class="csl-left-margin">12. </div><div class="csl-right-inline">United States Department of Agriculture, Economic Research Service. Rural-urban commuting area codes: Users’ guide. Published online 2026. <a href="https://www.ers.usda.gov/data-products/rural-urban-commuting-area-codes/users-guide">https://www.ers.usda.gov/data-products/rural-urban-commuting-area-codes/users-guide</a></div>
+</div>
+<div id="ref-zou2004" class="csl-entry" role="listitem">
+<div class="csl-left-margin">13. </div><div class="csl-right-inline">Zou G. A modified poisson regression approach to prospective studies with binary data. <em>American Journal of Epidemiology</em>. 2004;159(7):702-706. doi:<a href="https://doi.org/10.1093/aje/kwh090">10.1093/aje/kwh090</a></div>
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/vagishhemmige\.github\.io\/Cryptococcus-missed-diagnosis-USRDS");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation column-body">
+  <div class="nav-page nav-page-previous">
+      <a href="../quarto/figures.html" class="pagination-link" aria-label="Figures">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Figures</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../quarto/architecture.html" class="pagination-link" aria-label="Architecture">
+        <span class="nav-page-text">Architecture</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">pagetitle:</span><span class="co"> "Analysis plan"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span><span class="co"> html</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">from:</span><span class="co"> markdown+gfm_auto_identifiers</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!--</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">This page only shows analysis-plan.md from the repository root, which is the one source:</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">edit that file, not this page. Its first heading is the page title.</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">The plan links its own sections GitHub's way (for example #3-design). Quarto's</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">default heading IDs drop leading numbers (#design), so `from:` above</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">gives this page GitHub-style IDs and those links work on both.</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">--&gt;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>{{&lt; include ../analysis-plan.md &gt;}}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/edit/master/quarto/analysis-plan.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

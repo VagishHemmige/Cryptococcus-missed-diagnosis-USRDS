@@ -1,0 +1,87 @@
+---
+title: "1. Create cohort"
+format: html
+---
+
+This script builds the cohort of kidney transplant recipients with a cryptococcosis claim after their first transplant and Medicare primary coverage before it, records each exclusion in a flowchart, and attaches residence and transplant-center information for later scripts.
+
+::: {.Rcode title="Source code"}
+The full R script is available at:
+
+-   [`R/create_cohort.R`](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/blob/master/R/create_cohort.R)
+
+This R script file is itself reliant on the following helper file:
+
+-   [`R/setup.R`](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/blob/master/R/setup.R)
+
+The code sections below are imported directly from that script when this page is rendered.
+:::
+
+```{r}
+#| include: false
+#| eval: true
+#| cache: false
+knitr::read_chunk("../R/create_cohort.R")
+```
+
+Every inclusion and exclusion goes through `fc_filter()` from the flowchart package, so the cohort flow diagram drawn on the [Figures](figures.qmd) page reproduces the cohort exactly. The cohort used downstream is `patients_fc$data` after the last step.
+
+## Load the patient file
+
+The USRDS `patients` file supplies one row per person with demographics and transplant summary fields, loaded through `usRds::load_usrds_file()`. Its ZIP code is dropped here because it is the ZIP code when the person entered USRDS; the analysis needs residence at the time of the cryptococcosis claim, which is attached in the last step.
+
+```{r}
+#| label: load-usrds-files
+#| eval: false
+```
+
+## Start the flowchart
+
+The patient file becomes a flowchart object, and the first step keeps people with at least one recorded transplant (`TOTTX > 0`).
+
+```{r}
+#| label: initialize-flowchart
+#| eval: false
+```
+
+## Find cryptococcosis claims
+
+For the people still in the cohort, `get_IN_ICD()` and `get_PS_ICD()` from usRds search the institutional and physician/supplier claims of the years in `claim_years` for the codes in `cryptococcus_ICD_list` (see [Setup](setup.qmd#cryptococcosis-codes)). The two sets are stacked, and each person's earliest claim of any type, by claim start date, is kept as `first_cryptococcus_date`.
+
+[Section 3 of the analysis plan](analysis-plan.qmd#3-case-ascertainment-and-index) specifies a confirmed case (one inpatient stay, or two noninpatient encounters no more than 30 days apart), an index date within the qualifying episode, a uniform prior-history exclusion, and excludes skilled nursing, home health and hospice claims from ascertainment ([section 2](analysis-plan.qmd#2-sources-and-observation)). The current code uses the first single claim and does not yet apply those rules.
+
+```{r}
+#| label: cryptococcus-claims
+#| eval: false
+```
+
+## Apply the claim and transplant-timing steps
+
+The first claim date is joined to the cohort one-to-one by `USRDS_ID`. Two flowchart steps follow: people with no cryptococcosis claim in the search years are excluded, and so are people whose first claim is not after their first transplant date (`TX1DATE`). The plan requires a kidney transplant strictly before the index date ([section 4](analysis-plan.qmd#4-eligibility-and-transplant-chronology)).
+
+```{r}
+#| label: develop-flowchart
+#| eval: false
+```
+
+## Apply the Medicare coverage steps
+
+`usRds::verify_medicare_primary()` adds the Medicare primary coverage spell in force on the first claim date, if any, and `medicare_primary_TF`, which is true when that spell began at least `lookback_days` earlier. A check stops the script if the coverage join produced more than one row for anyone. Two flowchart steps then keep people with Medicare primary coverage on the claim date, and people with coverage for the full lookback.
+
+The plan's primary cohort requires uninterrupted Medicare fee-for-service Parts A and B (`MPAB`) coverage from day −365 through day 0, with broader primary coverage (`MPAB` or `MPO`) as a sensitivity analysis ([section 4](analysis-plan.qmd#4-eligibility-and-transplant-chronology)). Which payer categories count as primary here is set by `verify_medicare_primary()`; see the [usRds documentation](https://vagishhemmige.github.io/usRds/).
+
+```{r}
+#| label: medicare-coverage
+#| eval: false
+```
+
+## Attach residence and transplant center
+
+The `residenc` file is joined to the cohort by an interval join, keeping the residence spell that contains the first claim date, and a check stops the script if that join duplicated anyone. The `tx` file is loaded with each transplant's date, graft failure date, and center, and each transplant gets the date of the person's next transplant (a far-future date when there is none), ready for choosing the transplant episode that precedes the index date. The `facility` file supplies each center's ZIP code by year, matched to each transplant by center and the closest facility year at or after the transplant year.
+
+These transplant and facility tables (`transplant_df`, `transplant_joined`) are built but not yet joined to the cohort. The plan uses the most recent kidney transplant before index for transplant characteristics and center ([section 4](analysis-plan.qmd#4-eligibility-and-transplant-chronology)).
+
+```{r}
+#| label: residence-transplant-facility
+#| eval: false
+```

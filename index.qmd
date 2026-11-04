@@ -1,0 +1,16 @@
+---
+title: "Overview"
+format: html
+---
+
+## What this analysis does
+
+This analysis looks for potential missed opportunities to diagnose cryptococcosis among kidney transplant recipients in the United States. It uses the United States Renal Data System (USRDS) and its linked Medicare fee-for-service claims to find health care encounters, in the 90 days before a recipient's first observed qualifying cryptococcosis diagnosis, that carried a relevant diagnosis or diagnostic procedure. These are claims-based potential missed opportunities, not confirmed diagnostic errors.
+
+## Methods
+
+The primary estimand is the proportion of eligible recipients with at least one qualifying encounter in days −90 through −1, reported separately for diagnosis-based, procedure-based, and combined opportunities, with Wilson 95% confidence intervals [@wilson1927]. Secondary analyses examine associations with mortality, rurality, and distance to the transplant center. Reporting follows STROBE and RECORD [@vonelm2007strobe; @benchimol2015record]. The [analysis plan](quarto/analysis-plan.qmd) is the authoritative specification.
+
+## Status
+
+This analysis is preliminary. The analysis plan is a proposal that has not yet been adopted, and the code currently builds the initial cohort only. Open decisions and known gaps are tracked in [GitHub Issues](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/issues).

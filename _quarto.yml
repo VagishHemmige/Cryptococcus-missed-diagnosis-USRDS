@@ -1,0 +1,134 @@
+project:
+  type: website
+  output-dir: docs
+  # Only the site's pages. Without this list Quarto also renders the root
+  # .md files (analysis-plan.md, ARCHITECTURE.md, ...) as pages outside the
+  # sidebar; they are shown through quarto/ pages instead.
+  render:
+    - index.qmd
+    - 404.qmd
+    - quarto/**
+
+author:
+  - name: Vagish Hemmige
+    email: vagish.hemmige@gmail.com
+
+# Citations: [@key] from references.bib, in AMA style (numbered superscripts,
+# reference list at the end of each page). The CSL file is the official
+# citation-style-language style, kept in the repository so renders don't
+# depend on a download.
+bibliography: references.bib
+csl: american-medical-association.csl
+
+execute:
+  # The site documents the code and never runs the analysis. Chunks that
+  # must run (the read_chunk() imports, the Architecture page's reader) set
+  # eval: true themselves (AGENTS.md, "Quarto website").
+  eval: false
+
+website:
+  site-url: https://vagishhemmige.github.io/Cryptococcus-missed-diagnosis-USRDS
+  repo-url: https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS
+  repo-branch: master
+  repo-actions: [edit, issue]
+  title: "Cryptococcus missed diagnosis"
+
+  sidebar:
+    style: docked
+    # Every section starts open, including those inside Code
+    collapse-level: 3
+    search: true
+    contents:
+      - href: index.qmd
+        text: Home
+        icon: house
+
+      - section: Code
+        contents:
+          - section: Setup and helper functions
+            contents:
+              - href: quarto/setup.qmd
+                text: Setup
+                icon: laptop
+
+          - section: Data processing and analysis
+            contents:
+              - href: quarto/create_cohort.qmd
+                text: 1. Create cohort
+                icon: laptop
+
+          - section: Tables and figures
+            contents:
+              - href: quarto/figures.qmd
+                text: Figures
+                icon: laptop
+
+      - section: Project documents
+        contents:
+          - href: quarto/analysis-plan.qmd
+            text: Analysis plan
+            icon: file-earmark-ruled
+          - href: quarto/architecture.qmd
+            text: Architecture
+            icon: file-earmark-ruled
+          - href: quarto/agents.qmd
+            text: AGENTS.md
+            icon: file-earmark-ruled
+          - href: quarto/repository-blueprint.qmd
+            text: Repository blueprint
+            icon: file-earmark-ruled
+
+      - href: quarto/about.qmd
+        text: About
+        icon: info-circle
+
+  page-navigation: true
+
+# Each kind of page has one cue, used both in the sidebar (icon and colour
+# set here and in styles.css) and on the page (a callout of the same colour):
+#   background                book icon, blue
+#   study design and methods  diagram-3 icon, orange
+#   R code                    laptop icon and the 💻 Rcode callout, pink
+#   results                   clipboard-data icon and the 📊 Results callout, green
+#   project documents         ruled-page icon, grey
+# Yellow, with the ⏳ Pending callout, marks provisional content.
+custom-callout:
+  Rcode:
+    icon: true
+    icon-symbol: "💻"
+    color: "#d63384"
+  Results:
+    icon: true
+    icon-symbol: "📊"
+    color: "#198754"
+  Pending:
+    icon: true
+    icon-symbol: "⏳"
+    color: "#f0c400"
+
+filters:
+  # Yellow marks for provisional content, and their Pending callout
+  # (AGENTS.md, "Provisional content"). It runs before custom-callout,
+  # which turns the callout it adds into a styled box.
+  - quarto/_pending.lua
+  - custom-callout
+  - issue-comments
+
+# Readers can highlight text and comment; the relay files each comment as
+# a GitHub issue in this repository, worked out from the page's address.
+# Same relay as the other project sites.
+issue-comments:
+  endpoint: https://script.google.com/macros/s/AKfycbyE8fNBvy3vfuAnuQqdjpCTR8i2zYI-KSvGzhkGlQRYevI1I6auqq9H-mIk2yrXCaIROA/exec
+  contact: mailto:vagish.hemmige@gmail.com
+  # Readers enter a shared passcode before posting, as on the other sites
+  passcode: true
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    code-fold: true
+    code-tools: true
+    page-layout: full
+    code-summary: "Click to show/hide R Code"

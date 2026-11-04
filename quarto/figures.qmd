@@ -1,0 +1,35 @@
+---
+title: "Figures"
+format: html
+---
+
+This script draws the figures for the manuscript. So far that is the cohort flow diagram.
+
+::: {.Rcode title="Source code"}
+The full R script is available at:
+
+-   [`R/figures.R`](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/blob/master/R/figures.R)
+
+This R script file is itself reliant on the following files:
+
+-   [`R/setup.R`](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/blob/master/R/setup.R)
+-   [`R/create_cohort.R`](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/blob/master/R/create_cohort.R), which builds `patients_fc`
+
+The code sections below are imported directly from that script when this page is rendered.
+:::
+
+```{r}
+#| include: false
+#| eval: true
+#| cache: false
+knitr::read_chunk("../R/figures.R")
+```
+
+## Cohort flowchart
+
+`fc_draw()` draws the STROBE cohort flow diagram from `patients_fc`, the flowchart object built step by step on the [Create cohort](create_cohort.qmd) page, so every box matches a step in the code. Before the diagram leaves the secure environment, every box is checked for counts from 1 to 10, including excluded counts that could be recovered by subtraction, under the data use agreement's small-cell rule (see [AGENTS.md](agents.qmd), "Restricted data"). The diagram is not yet exported to `figures/`.
+
+```{r}
+#| label: final-flowchart
+#| eval: false
+```

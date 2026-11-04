@@ -1,0 +1,63 @@
+---
+title: "Setup"
+format: html
+---
+
+This script attaches the packages and defines the constants and code lists that every other script uses. `R/main.R` sources it first.
+
+::: {.Rcode title="Source code"}
+The full R script is available at:
+
+-   [`R/setup.R`](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/blob/master/R/setup.R)
+
+The code sections below are imported directly from that script when this page is rendered.
+:::
+
+```{r}
+#| include: false
+#| eval: true
+#| cache: false
+knitr::read_chunk("../R/setup.R")
+```
+
+## Libraries
+
+The analysis uses the tidyverse and lubridate for data management and dates, [usRds](https://vagishhemmige.github.io/usRds/) to load USRDS files and extract Medicare claims, and [flowchart](https://CRAN.R-project.org/package=flowchart) to build the cohort so that the STROBE flow diagram and the analytic cohort come from the same code. These are the only `library()` calls in the project; other scripts rely on them.
+
+```{r}
+#| label: libraries
+#| eval: false
+```
+
+## Constants
+
+Numbers a reader might want to change live here as named constants, so downstream scripts and flowchart labels use one definition:
+
+-   `claim_years`: the calendar years of institutional (IN) and physician/supplier (PS) claims searched for cryptococcosis.
+-   `lookback_days`: the days of Medicare primary coverage required before the first cryptococcosis claim.
+-   `icd10_start_date`: the ICD-9-CM to ICD-10 transition date. It is defined but not yet used by any script.
+
+The plan sets index-date eligibility from the date range in which claims are complete for the release analyzed ([analysis plan, section 2](analysis-plan.qmd#2-sources-and-observation)); `claim_years` is the current code's fixed range.
+
+```{r}
+#| label: constants
+#| eval: false
+```
+
+## Cryptococcosis codes
+
+`cryptococcus_ICD_list` holds the ICD-9-CM and ICD-10-CM diagnosis codes for cryptococcosis, stored without periods. The usRds claim functions match them exactly. [Section 3 of the analysis plan](analysis-plan.qmd#3-case-ascertainment-and-index) calls for a clinically reviewed list.
+
+```{r}
+#| label: icd-code-lists
+#| eval: false
+```
+
+## Missed-opportunity code maps
+
+`icd9_map` and `icd10_map` list the diagnosis and procedure codes for the categories that could signal an earlier presentation of cryptococcosis: lumbar puncture, increased intracranial pressure, brain infection, encephalopathy, headache, focal neurological deficit, stroke, pneumonia, pleural and mediastinal disease, signs of infection, and infection not otherwise specified. Each row records the category, whether the code is a diagnosis or a procedure, and the code. `icd_combined_map` stacks the two. No script uses the maps yet; they are the starting point for the opportunity ascertainment in [sections 5 and 6 of the plan](analysis-plan.qmd#5-prior-history-and-opportunity-windows), which requires clinically reviewed, era-appropriate exact or prefix rules.
+
+```{r}
+#| label: missed-diagnosis-code-maps
+#| eval: false
+```

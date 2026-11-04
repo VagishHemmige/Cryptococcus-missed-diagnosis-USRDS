@@ -1,0 +1,38 @@
+---
+title: "About"
+format: html
+---
+
+## The study
+
+This study asks how often kidney transplant recipients with cryptococcosis had earlier health care encounters that may have been missed opportunities for diagnosis. The analysis is preliminary: the analysis plan is a proposal not yet adopted, and no results have been released.
+
+-   **Vagish Hemmige**
+-   **Hyun ah Yoon**
+
+Vagish Hemmige and Hyun ah Yoon make the scientific decisions. Open decisions are listed in [GitHub Issues](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/issues).
+
+## This repository
+
+`R/main.R` runs the scripts in order: setup, cohort construction, and figures. The data come from the United States Renal Data System (USRDS), including its linked Medicare claims, loaded through the [usRds](https://vagishhemmige.github.io/usRds/) package. USRDS data are restricted under a data use agreement, so they are not in the repository; the code runs only where an authorized person has access to them.
+
+Contributions follow the rules in [`AGENTS.md`](agents.qmd); known issues and open decisions are tracked in [Issues](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/issues).
+
+## How this website was created
+
+The site is built with [Quarto](https://quarto.org) from the analysis scripts themselves. Each code page imports the labelled sections of its script from `R/` and shows them with an explanation; the site never runs the analysis, so it is built without the analysis data. A GitHub Actions workflow renders and publishes it whenever `master` changes.
+
+The repository follows the R Analysis Workflow plugin and the layout of [Cryptococcus-cost-analysis](https://github.com/VagishHemmige/Cryptococcus-cost-analysis). AI assistants may help draft and review code and documentation. They never see the USRDS data, they work on synthetic data only, and every change reaches `master` only through a pull request a person reviews and merges.
+
+Four documents describe the project. In short: the plan is the scientific intent, the architecture is the workflow as implemented, and `AGENTS.md` holds the rules for working together.
+
+-   [**Analysis plan**](analysis-plan.qmd): *what the analysis is meant to do, and why.* The question, the population, the methods, and the open decisions. Code implements it and does not redefine it.
+-   [**Architecture**](architecture.qmd): *how the code does it.* The scripts, the order they run in, what each needs and produces, and how data flow between them.
+-   [**AGENTS.md**](agents.qmd): *how people and AI assistants work on the project.* Rules for restricted data, coding, checks, proposing changes and getting a person's approval.
+-   [**Repository blueprint**](repository-blueprint.qmd): *the layout every project of this kind starts from*, which the architecture document then describes as built.
+
+## Pages
+
+-   [**Setup**](setup.qmd): packages, shared constants, and the cryptococcosis and missed-opportunity code lists.
+-   [**1. Create cohort**](create_cohort.qmd): builds the cohort through the flowchart and attaches residence and transplant-center information.
+-   [**Figures**](figures.qmd): draws the cohort flow diagram.

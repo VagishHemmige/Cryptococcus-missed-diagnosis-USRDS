@@ -117,17 +117,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-diagram/mermaid-init.js"></script>
 <link href="../site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 <style>
-div.callout-Results.callout {
-  border-left-color: #198754;
-}
-div.callout-Results.callout-style-default > .callout-header {
-  background-color: rgba(25, 135, 84, 0.13);
-}
-div.callout-Results .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
-div.callout-Results.callout-style-default .callout-icon::before, div.callout-Results.callout-titled .callout-icon::before {
-  content: '📊';
-  background-image: none;
-}
 div.callout-Rcode.callout {
   border-left-color: #d63384;
 }
@@ -137,6 +126,17 @@ div.callout-Rcode.callout-style-default > .callout-header {
 div.callout-Rcode .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
 div.callout-Rcode.callout-style-default .callout-icon::before, div.callout-Rcode.callout-titled .callout-icon::before {
   content: '💻';
+  background-image: none;
+}
+div.callout-Results.callout {
+  border-left-color: #198754;
+}
+div.callout-Results.callout-style-default > .callout-header {
+  background-color: rgba(25, 135, 84, 0.13);
+}
+div.callout-Results .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
+div.callout-Results.callout-style-default .callout-icon::before, div.callout-Results.callout-titled .callout-icon::before {
+  content: '📊';
   background-image: none;
 }
 div.callout-Pending.callout {
@@ -401,12 +401,24 @@ It reads only ARCHITECTURE.md, never data, and runs no analysis code.
 </section>
 <section id="architecture-diagram" class="level2">
 <h2 class="anchored" data-anchor-id="architecture-diagram">Architecture diagram</h2>
-<div class="cell" data-layout-align="default">
+<div class="cell" data-eval="true" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class="figure"><p></p>
 <div>
+<pre class="mermaid mermaid-js">flowchart TD
+    M[R/main.R&lt;br/&gt;entry point] --&gt; S[R/setup.R]
+    M --&gt; C[R/create_cohort.R]
+    M --&gt; F[R/figures.R]
 
+    S -- "constants, code lists" --&gt; C
+    C -- "patients_fc" --&gt; F
+
+    U[[usRds package]] --&gt; C
+    D[(USRDS data directory&lt;br/&gt;restricted, outside repo)] --&gt; U
+
+    F --&gt; O[Flowchart drawn in session&lt;br/&gt;not saved]
+</pre>
 </div>
 <p></p></figure><p></p>
 </div>
@@ -415,12 +427,31 @@ It reads only ARCHITECTURE.md, never data, and runs no analysis code.
 </section>
 <section id="data-flow" class="level2">
 <h2 class="anchored" data-anchor-id="data-flow">Data flow</h2>
-<div class="cell" data-layout-align="default">
+<div class="cell" data-eval="true" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class="figure"><p></p>
 <div>
-
+<pre class="mermaid mermaid-js">flowchart LR
+    P[(patients)] --&gt; R1[patients_raw]
+    R1 --&gt;|"as_fc + fc_filter:&lt;br/&gt;any transplant"| FC1[patients_fc]
+    FC1 --&gt;|"IDs"| IDS[transplant_id_list]
+    IDS --&gt; CL[(IN and PS claims)]
+    CL --&gt;|"get_IN_ICD + get_PS_ICD"| CC[cryptococcus_claims_df]
+    CC --&gt;|"earliest claim per patient"| CD[cryptococcus_df]
+    CD --&gt;|"join to $data"| FC2[patients_fc]
+    FC2 --&gt;|"fc_filter: has claim;&lt;br/&gt;after first transplant"| FC3[patients_fc]
+    PH[(payhist)] --&gt;|"verify_medicare_primary"| FC4
+    FC3 --&gt; FC4[patients_fc&lt;br/&gt;+ coverage columns]
+    FC4 --&gt;|"fc_filter: Medicare primary on date;&lt;br/&gt;coverage ≥ lookback"| FC5[patients_fc]
+    RES[(residenc)] --&gt;|"interval join on index date"| FC6[patients_fc&lt;br/&gt;+ ZIP code]
+    FC5 --&gt; FC6
+    TX[(tx)] --&gt; TD[transplant_df]
+    FAC[(facility)] --&gt; FA[facility]
+    TD --&gt; TJ[transplant_joined]
+    FA --&gt; TJ
+    FC6 --&gt; FIG[fc_draw in figures.R]
+</pre>
 </div>
 <p></p></figure><p></p>
 </div>
@@ -1132,7 +1163,7 @@ It reads only ARCHITECTURE.md, never data, and runs no analysis code.
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">#| output: asis</span></span>
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(<span class="st">"../ARCHITECTURE.md"</span>)) {</span>
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  architecture <span class="ot">&lt;-</span> <span class="fu">readLines</span>(<span class="st">"../ARCHITECTURE.md"</span>, <span class="at">warn =</span> <span class="cn">FALSE</span>, <span class="at">encoding =</span> <span class="st">"UTF-8"</span>)</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  architecture <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">"^```mermaid</span><span class="sc">\\</span><span class="st">s*$"</span>, <span class="st">"```{mermaid}"</span>, architecture)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  architecture <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">"^```mermaid</span><span class="sc">\\</span><span class="st">s*$"</span>, <span class="st">"```{mermaid}</span><span class="sc">\n</span><span class="st">%%| eval: true"</span>, architecture)</span>
 <span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(architecture, <span class="at">sep =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
 <span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
 <span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"# Architecture</span><span class="sc">\n\n</span><span class="st">`ARCHITECTURE.md` has not been written yet.</span><span class="sc">\n</span><span class="st">"</span>)</span>

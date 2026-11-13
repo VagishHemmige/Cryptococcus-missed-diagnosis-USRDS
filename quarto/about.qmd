@@ -14,7 +14,7 @@ Vagish Hemmige and Hyun ah Yoon make the scientific decisions. Open decisions ar
 
 ## This repository
 
-`R/main.R` runs the scripts in order: setup, cohort construction, and figures. The data come from the United States Renal Data System (USRDS), including its linked Medicare claims, loaded through the [usRds](https://vagishhemmige.github.io/usRds/) package. USRDS data are restricted under a data use agreement, so they are not in the repository; the code runs only where an authorized person has access to them.
+`R/main.R` runs the scripts in order: setup, cohort construction, and figures. The data come from the United States Renal Data System (USRDS), including its linked Medicare claims, loaded through the [{usRds}](https://vagishhemmige.github.io/usRds/) package. USRDS data are restricted under a data use agreement, so they are not in the repository; the code runs only where an authorized person has access to them.
 
 Contributions follow the rules in [`AGENTS.md`](agents.qmd); known issues and open decisions are tracked in [Issues](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/issues).
 

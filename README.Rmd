@@ -38,6 +38,6 @@ https://vagishhemmige.github.io/Cryptococcus-missed-diagnosis-USRDS/
 
 ## Running the analysis
 
-Run `R/main.R` from the project root. It requires authorized access to the USRDS files, located through the [usRds](https://vagishhemmige.github.io/usRds/) package.
+Run `R/main.R` from the project root. It requires authorized access to the USRDS files, located through the [{usRds}](https://vagishhemmige.github.io/usRds/) package.
 
 <!-- Results: add only when the figures and tables are cleared for public release. -->

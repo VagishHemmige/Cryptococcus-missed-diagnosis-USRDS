@@ -12,9 +12,9 @@ The analysis is a set of R scripts that run in sequence in one R session. `R/mai
 2. a cohort-construction script
 3. a figures script
 
-All USRDS file access goes through the usRds package. Cohort inclusions and exclusions are recorded with the flowchart package, so the participant flowchart is produced directly from the cohort-building code.
+All USRDS file access goes through the [{usRds}](https://vagishhemmige.github.io/usRds/) package. Cohort inclusions and exclusions are recorded with the [{flowchart}](https://bruigtp.github.io/flowchart/) package, so the participant flowchart is produced directly from the cohort-building code.
 
-Every object lives in the global environment of the session. The pipeline writes nothing to disk: no intermediate files, and no exported tables or figures. Restricted data are read from the USRDS data directory configured for usRds and stay in memory.
+Every object lives in the global environment of the session. The pipeline writes nothing to disk: no intermediate files, and no exported tables or figures. Restricted data are read from the USRDS data directory configured for {usRds} and stay in memory.
 
 **Current scope.** The code builds a cohort of kidney transplant recipients with a cryptococcosis claim and draws its flowchart. Not yet implemented:
 
@@ -123,10 +123,10 @@ How the cohort moves through `create_cohort.R`:
 
 **External functions:**
 
-- usRds: `load_usrds_file()`, `get_IN_ICD()`, `get_PS_ICD()`, `verify_medicare_primary()`
+- {usRds}: `load_usrds_file()`, `get_IN_ICD()`, `get_PS_ICD()`, `verify_medicare_primary()`
 - flowchart: `as_fc()`, `fc_filter()`
 
-**Interactions:** takes constants and code lists from setup, and reads the USRDS files through usRds. Passes `patients_fc` to figures.
+**Interactions:** takes constants and code lists from setup, and reads the USRDS files through {usRds}. Passes `patients_fc` to figures.
 
 ### Figures
 
@@ -144,20 +144,20 @@ How the cohort moves through `create_cohort.R`:
 
 | Dependency | Role |
 |---|---|
-| usRds | Locates and reads USRDS files; extracts claims by ICD code; checks Medicare primary coverage. All data access goes through it. |
+| {usRds} | Locates and reads USRDS files; extracts claims by ICD code; checks Medicare primary coverage. All data access goes through it. |
 | flowchart | Records cohort filtering steps and draws the participant flowchart |
-| tidyverse, lubridate | Data manipulation and dates |
-| USRDS data directory | The restricted source files, outside the repository. Its location is set through usRds outside this code; no script sets it. |
+| [{tidyverse}](https://www.tidyverse.org/), [{lubridate}](https://lubridate.tidyverse.org/) | Data manipulation and dates |
+| USRDS data directory | The restricted source files, outside the repository. Its location is set through {usRds} outside this code; no script sets it. |
 
 ## Configuration
 
 - **Analysis constants:** in `R/setup.R` (see Setup above). Flowchart labels in `create_cohort.R` still hard-code the claim years and the 365-day look-back, so they do not follow the constants.
-- **Data location:** set through usRds's own configuration, not in this repository.
+- **Data location:** set through {usRds}'s own configuration, not in this repository.
 - **Ignored files:** `.gitignore` covers RStudio and session files (`.Rproj.user`, `.Rhistory`, `.Rdata`), `.DS_Store`, `.httr-oauth`, and `.quarto`.
 
 ## Chunk labels
 
-Each script is divided into sections marked `## ---- label`, so that Quarto documents can load them with `knitr::read_chunk()`. The labels in each script are listed under Components above. No Quarto documents exist yet. `README.Rmd` is the unedited usethis template, and it renders `README.md` together with an example figure in `README_files/`.
+Each script is divided into sections marked `## ---- label`, so that Quarto documents can load them with `knitr::read_chunk()`. The labels in each script are listed under Components above. No Quarto documents exist yet. `README.Rmd` is the unedited [{usethis}](https://usethis.r-lib.org/) template, and it renders `README.md` together with an example figure in `README_files/`.
 
 ## Code references
 
@@ -179,7 +179,7 @@ Each script is divided into sections marked `## ---- label`, so that Quarto docu
 |---|---|
 | IN claims | USRDS institutional claims: inpatient, outpatient, SNF, home health, and hospice. Not inpatient only. |
 | PS claims | USRDS physician/supplier claims |
-| `HCFASAF` | The claim-type variable on claims returned by usRds |
+| `HCFASAF` | The claim-type variable on claims returned by {usRds} |
 | Index date | Currently `first_cryptococcus_date`, the earliest cryptococcosis claim of any type. `analysis-plan.md` defines the intended index date. |
 | `patients_fc` | The flowchart object. `patients_fc$data` is the cohort, and its filter history becomes the flowchart. |
 | Look-back | The days of continuous Medicare primary coverage required before the index date (`lookback_days`) |

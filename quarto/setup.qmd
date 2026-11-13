@@ -22,7 +22,7 @@ knitr::read_chunk("../R/setup.R")
 
 ## Libraries
 
-The analysis uses the tidyverse and lubridate for data management and dates, [usRds](https://vagishhemmige.github.io/usRds/) to load USRDS files and extract Medicare claims, and [flowchart](https://CRAN.R-project.org/package=flowchart) to build the cohort so that the STROBE flow diagram and the analytic cohort come from the same code. These are the only `library()` calls in the project; other scripts rely on them.
+The analysis uses the [{tidyverse}](https://www.tidyverse.org/) and [{lubridate}](https://lubridate.tidyverse.org/) for data management and dates, [{usRds}](https://vagishhemmige.github.io/usRds/) to load USRDS files and extract Medicare claims, and [{flowchart}](https://CRAN.R-project.org/package=flowchart) to build the cohort so that the STROBE flow diagram and the analytic cohort come from the same code. These are the only `library()` calls in the project; other scripts rely on them.
 
 ```{r}
 #| label: libraries
@@ -46,7 +46,7 @@ The plan sets index-date eligibility from the date range in which claims are com
 
 ## Cryptococcosis codes
 
-`cryptococcus_ICD_list` holds the ICD-9-CM and ICD-10-CM diagnosis codes for cryptococcosis, stored without periods. The usRds claim functions match them exactly. [Section 3 of the analysis plan](analysis-plan.qmd#3-case-ascertainment-and-index) calls for a clinically reviewed list.
+`cryptococcus_ICD_list` holds the ICD-9-CM and ICD-10-CM diagnosis codes for cryptococcosis, stored without periods. The {usRds} claim functions match them exactly. [Section 3 of the analysis plan](analysis-plan.qmd#3-case-ascertainment-and-index) calls for a clinically reviewed list.
 
 ```{r}
 #| label: icd-code-lists

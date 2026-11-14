@@ -35,6 +35,6 @@ available at:
 
 Run `R/main.R` from the project root. It requires authorized access to
 the USRDS files, located through the
-[usRds](https://vagishhemmige.github.io/usRds/) package.
+[{usRds}](https://vagishhemmige.github.io/usRds/) package.
 
 <!-- Results: add only when the figures and tables are cleared for public release. -->

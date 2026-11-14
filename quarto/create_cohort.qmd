@@ -24,7 +24,7 @@ The code sections below are imported directly from that script when this page is
 knitr::read_chunk("../R/create_cohort.R")
 ```
 
-Every inclusion and exclusion goes through `fc_filter()` from the flowchart package, so the cohort flow diagram drawn on the [Figures](figures.qmd) page reproduces the cohort exactly. The cohort used downstream is `patients_fc$data` after the last step.
+Every inclusion and exclusion goes through `fc_filter()` from the [{flowchart}](https://bruigtp.github.io/flowchart/) package, so the cohort flow diagram drawn on the [Figures](figures.qmd) page reproduces the cohort exactly. The cohort used downstream is `patients_fc$data` after the last step.
 
 ## Load the patient file
 
@@ -46,7 +46,7 @@ The patient file becomes a flowchart object, and the first step keeps people wit
 
 ## Find cryptococcosis claims
 
-For the people still in the cohort, `get_IN_ICD()` and `get_PS_ICD()` from usRds search the institutional and physician/supplier claims of the years in `claim_years` for the codes in `cryptococcus_ICD_list` (see [Setup](setup.qmd#cryptococcosis-codes)). The two sets are stacked, and each person's earliest claim of any type, by claim start date, is kept as `first_cryptococcus_date`.
+For the people still in the cohort, `get_IN_ICD()` and `get_PS_ICD()` from [{usRds}](https://vagishhemmige.github.io/usRds/) search the institutional and physician/supplier claims of the years in `claim_years` for the codes in `cryptococcus_ICD_list` (see [Setup](setup.qmd#cryptococcosis-codes)). The two sets are stacked, and each person's earliest claim of any type, by claim start date, is kept as `first_cryptococcus_date`.
 
 [Section 3 of the analysis plan](analysis-plan.qmd#3-case-ascertainment-and-index) specifies a confirmed case (one inpatient stay, or two noninpatient encounters no more than 30 days apart), an index date within the qualifying episode, a uniform prior-history exclusion, and excludes skilled nursing, home health and hospice claims from ascertainment ([section 2](analysis-plan.qmd#2-sources-and-observation)). The current code uses the first single claim and does not yet apply those rules.
 
@@ -68,7 +68,7 @@ The first claim date is joined to the cohort one-to-one by `USRDS_ID`. Two flowc
 
 `usRds::verify_medicare_primary()` adds the Medicare primary coverage spell in force on the first claim date, if any, and `medicare_primary_TF`, which is true when that spell began at least `lookback_days` earlier. A check stops the script if the coverage join produced more than one row for anyone. Two flowchart steps then keep people with Medicare primary coverage on the claim date, and people with coverage for the full lookback.
 
-The plan's primary cohort requires uninterrupted Medicare fee-for-service Parts A and B (`MPAB`) coverage from day −365 through day 0, with broader primary coverage (`MPAB` or `MPO`) as a sensitivity analysis ([section 4](analysis-plan.qmd#4-eligibility-and-transplant-chronology)). Which payer categories count as primary here is set by `verify_medicare_primary()`; see the [usRds documentation](https://vagishhemmige.github.io/usRds/).
+The plan's primary cohort requires uninterrupted Medicare fee-for-service Parts A and B (`MPAB`) coverage from day −365 through day 0, with broader primary coverage (`MPAB` or `MPO`) as a sensitivity analysis ([section 4](analysis-plan.qmd#4-eligibility-and-transplant-chronology)). Which payer categories count as primary here is set by `verify_medicare_primary()`; see the [{usRds} documentation](https://vagishhemmige.github.io/usRds/).
 
 ```{r}
 #| label: medicare-coverage

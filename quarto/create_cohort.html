@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-66ae90e4418e9d0ac3caa4b8c3bef75c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-9c6fd4a99ff4209dd1149a1765198857.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script src="../site_libs/quarto-contrib/issue-comments-0.3.0/issue-comments.js"></script>
 <link href="../site_libs/quarto-contrib/issue-comments-0.3.0/issue-comments.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
@@ -114,15 +114,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 <style>
-div.callout-Rcode.callout {
-  border-left-color: #d63384;
+div.callout-Pending.callout {
+  border-left-color: #f0c400;
 }
-div.callout-Rcode.callout-style-default > .callout-header {
-  background-color: rgba(214, 51, 132, 0.13);
+div.callout-Pending.callout-style-default > .callout-header {
+  background-color: rgba(240, 196, 0, 0.13);
 }
-div.callout-Rcode .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
-div.callout-Rcode.callout-style-default .callout-icon::before, div.callout-Rcode.callout-titled .callout-icon::before {
-  content: '💻';
+div.callout-Pending .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
+div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pending.callout-titled .callout-icon::before {
+  content: '⏳';
   background-image: none;
 }
 div.callout-Results.callout {
@@ -136,15 +136,15 @@ div.callout-Results.callout-style-default .callout-icon::before, div.callout-Res
   content: '📊';
   background-image: none;
 }
-div.callout-Pending.callout {
-  border-left-color: #f0c400;
+div.callout-Rcode.callout {
+  border-left-color: #d63384;
 }
-div.callout-Pending.callout-style-default > .callout-header {
-  background-color: rgba(240, 196, 0, 0.13);
+div.callout-Rcode.callout-style-default > .callout-header {
+  background-color: rgba(214, 51, 132, 0.13);
 }
-div.callout-Pending .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
-div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pending.callout-titled .callout-icon::before {
-  content: '⏳';
+div.callout-Rcode .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
+div.callout-Rcode.callout-style-default .callout-icon::before, div.callout-Rcode.callout-titled .callout-icon::before {
+  content: '💻';
   background-image: none;
 }
 </style>
@@ -375,7 +375,7 @@ div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pen
 <p>The code sections below are imported directly from that script when this page is rendered.</p>
 </div>
 </div>
-<p>Every inclusion and exclusion goes through <code>fc_filter()</code> from the flowchart package, so the cohort flow diagram drawn on the <a href="../quarto/figures.html">Figures</a> page reproduces the cohort exactly. The cohort used downstream is <code>patients_fc$data</code> after the last step.</p>
+<p>Every inclusion and exclusion goes through <code>fc_filter()</code> from the <a href="https://bruigtp.github.io/flowchart/">{flowchart}</a> package, so the cohort flow diagram drawn on the <a href="../quarto/figures.html">Figures</a> page reproduces the cohort exactly. The cohort used downstream is <code>patients_fc$data</code> after the last step.</p>
 <section id="load-the-patient-file" class="level2">
 <h2 class="anchored" data-anchor-id="load-the-patient-file">Load the patient file</h2>
 <p>The USRDS <code>patients</code> file supplies one row per person with demographics and transplant summary fields, loaded through <code>usRds::load_usrds_file()</code>. Its ZIP code is dropped here because it is the ZIP code when the person entered USRDS; the analysis needs residence at the time of the cryptococcosis claim, which is attached in the last step.</p>
@@ -407,7 +407,7 @@ div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pen
 </section>
 <section id="find-cryptococcosis-claims" class="level2">
 <h2 class="anchored" data-anchor-id="find-cryptococcosis-claims">Find cryptococcosis claims</h2>
-<p>For the people still in the cohort, <code>get_IN_ICD()</code> and <code>get_PS_ICD()</code> from usRds search the institutional and physician/supplier claims of the years in <code>claim_years</code> for the codes in <code>cryptococcus_ICD_list</code> (see <a href="../quarto/setup.html#cryptococcosis-codes">Setup</a>). The two sets are stacked, and each person’s earliest claim of any type, by claim start date, is kept as <code>first_cryptococcus_date</code>.</p>
+<p>For the people still in the cohort, <code>get_IN_ICD()</code> and <code>get_PS_ICD()</code> from <a href="https://vagishhemmige.github.io/usRds/">{usRds}</a> search the institutional and physician/supplier claims of the years in <code>claim_years</code> for the codes in <code>cryptococcus_ICD_list</code> (see <a href="../quarto/setup.html#cryptococcosis-codes">Setup</a>). The two sets are stacked, and each person’s earliest claim of any type, by claim start date, is kept as <code>first_cryptococcus_date</code>.</p>
 <p><a href="../quarto/analysis-plan.html#3-case-ascertainment-and-index">Section 3 of the analysis plan</a> specifies a confirmed case (one inpatient stay, or two noninpatient encounters no more than 30 days apart), an index date within the qualifying episode, a uniform prior-history exclusion, and excludes skilled nursing, home health and hospice claims from ascertainment (<a href="../quarto/analysis-plan.html#2-sources-and-observation">section 2</a>). The current code uses the first single claim and does not yet apply those rules.</p>
 <div class="cell">
 <details class="code-fold">
@@ -463,7 +463,7 @@ div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pen
 <section id="apply-the-medicare-coverage-steps" class="level2">
 <h2 class="anchored" data-anchor-id="apply-the-medicare-coverage-steps">Apply the Medicare coverage steps</h2>
 <p><code>usRds::verify_medicare_primary()</code> adds the Medicare primary coverage spell in force on the first claim date, if any, and <code>medicare_primary_TF</code>, which is true when that spell began at least <code>lookback_days</code> earlier. A check stops the script if the coverage join produced more than one row for anyone. Two flowchart steps then keep people with Medicare primary coverage on the claim date, and people with coverage for the full lookback.</p>
-<p>The plan’s primary cohort requires uninterrupted Medicare fee-for-service Parts A and B (<code>MPAB</code>) coverage from day −365 through day 0, with broader primary coverage (<code>MPAB</code> or <code>MPO</code>) as a sensitivity analysis (<a href="../quarto/analysis-plan.html#4-eligibility-and-transplant-chronology">section 4</a>). Which payer categories count as primary here is set by <code>verify_medicare_primary()</code>; see the <a href="https://vagishhemmige.github.io/usRds/">usRds documentation</a>.</p>
+<p>The plan’s primary cohort requires uninterrupted Medicare fee-for-service Parts A and B (<code>MPAB</code>) coverage from day −365 through day 0, with broader primary coverage (<code>MPAB</code> or <code>MPO</code>) as a sensitivity analysis (<a href="../quarto/analysis-plan.html#4-eligibility-and-transplant-chronology">section 4</a>). Which payer categories count as primary here is set by <code>verify_medicare_primary()</code>; see the <a href="https://vagishhemmige.github.io/usRds/">{usRds} documentation</a>.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Click to show/hide R Code</summary>
@@ -1033,7 +1033,7 @@ div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pen
 <span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">read_chunk</span>(<span class="st">"../R/create_cohort.R"</span>)</span>
 <span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>Every inclusion and exclusion goes through <span class="in">`fc_filter()`</span> from the flowchart package, so the cohort flow diagram drawn on the <span class="co">[</span><span class="ot">Figures</span><span class="co">](figures.qmd)</span> page reproduces the cohort exactly. The cohort used downstream is <span class="in">`patients_fc$data`</span> after the last step.</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>Every inclusion and exclusion goes through <span class="in">`fc_filter()`</span> from the <span class="co">[</span><span class="ot">{flowchart}</span><span class="co">](https://bruigtp.github.io/flowchart/)</span> package, so the cohort flow diagram drawn on the <span class="co">[</span><span class="ot">Figures</span><span class="co">](figures.qmd)</span> page reproduces the cohort exactly. The cohort used downstream is <span class="in">`patients_fc$data`</span> after the last step.</span>
 <span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="fu">## Load the patient file</span></span>
 <span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a></span>
@@ -1055,7 +1055,7 @@ div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pen
 <span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a><span class="fu">## Find cryptococcosis claims</span></span>
 <span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>For the people still in the cohort, <span class="in">`get_IN_ICD()`</span> and <span class="in">`get_PS_ICD()`</span> from usRds search the institutional and physician/supplier claims of the years in <span class="in">`claim_years`</span> for the codes in <span class="in">`cryptococcus_ICD_list`</span> (see <span class="co">[</span><span class="ot">Setup</span><span class="co">](setup.qmd#cryptococcosis-codes)</span>). The two sets are stacked, and each person's earliest claim of any type, by claim start date, is kept as <span class="in">`first_cryptococcus_date`</span>.</span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>For the people still in the cohort, <span class="in">`get_IN_ICD()`</span> and <span class="in">`get_PS_ICD()`</span> from <span class="co">[</span><span class="ot">{usRds}</span><span class="co">](https://vagishhemmige.github.io/usRds/)</span> search the institutional and physician/supplier claims of the years in <span class="in">`claim_years`</span> for the codes in <span class="in">`cryptococcus_ICD_list`</span> (see <span class="co">[</span><span class="ot">Setup</span><span class="co">](setup.qmd#cryptococcosis-codes)</span>). The two sets are stacked, and each person's earliest claim of any type, by claim start date, is kept as <span class="in">`first_cryptococcus_date`</span>.</span>
 <span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Section 3 of the analysis plan</span><span class="co">](analysis-plan.qmd#3-case-ascertainment-and-index)</span> specifies a confirmed case (one inpatient stay, or two noninpatient encounters no more than 30 days apart), an index date within the qualifying episode, a uniform prior-history exclusion, and excludes skilled nursing, home health and hospice claims from ascertainment (<span class="co">[</span><span class="ot">section 2</span><span class="co">](analysis-plan.qmd#2-sources-and-observation)</span>). The current code uses the first single claim and does not yet apply those rules.</span>
 <span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a></span>
@@ -1077,7 +1077,7 @@ div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pen
 <span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a><span class="in">`usRds::verify_medicare_primary()`</span> adds the Medicare primary coverage spell in force on the first claim date, if any, and <span class="in">`medicare_primary_TF`</span>, which is true when that spell began at least <span class="in">`lookback_days`</span> earlier. A check stops the script if the coverage join produced more than one row for anyone. Two flowchart steps then keep people with Medicare primary coverage on the claim date, and people with coverage for the full lookback.</span>
 <span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a>The plan's primary cohort requires uninterrupted Medicare fee-for-service Parts A and B (<span class="in">`MPAB`</span>) coverage from day −365 through day 0, with broader primary coverage (<span class="in">`MPAB`</span> or <span class="in">`MPO`</span>) as a sensitivity analysis (<span class="co">[</span><span class="ot">section 4</span><span class="co">](analysis-plan.qmd#4-eligibility-and-transplant-chronology)</span>). Which payer categories count as primary here is set by <span class="in">`verify_medicare_primary()`</span>; see the <span class="co">[</span><span class="ot">usRds documentation</span><span class="co">](https://vagishhemmige.github.io/usRds/)</span>.</span>
+<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a>The plan's primary cohort requires uninterrupted Medicare fee-for-service Parts A and B (<span class="in">`MPAB`</span>) coverage from day −365 through day 0, with broader primary coverage (<span class="in">`MPAB`</span> or <span class="in">`MPO`</span>) as a sensitivity analysis (<span class="co">[</span><span class="ot">section 4</span><span class="co">](analysis-plan.qmd#4-eligibility-and-transplant-chronology)</span>). Which payer categories count as primary here is set by <span class="in">`verify_medicare_primary()`</span>; see the <span class="co">[</span><span class="ot">{usRds} documentation</span><span class="co">](https://vagishhemmige.github.io/usRds/)</span>.</span>
 <span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
 <span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: medicare-coverage</span></span>

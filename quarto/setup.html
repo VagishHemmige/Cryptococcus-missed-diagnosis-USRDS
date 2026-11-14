@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-66ae90e4418e9d0ac3caa4b8c3bef75c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-9c6fd4a99ff4209dd1149a1765198857.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script src="../site_libs/quarto-contrib/issue-comments-0.3.0/issue-comments.js"></script>
 <link href="../site_libs/quarto-contrib/issue-comments-0.3.0/issue-comments.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
@@ -125,17 +125,6 @@ div.callout-Rcode.callout-style-default .callout-icon::before, div.callout-Rcode
   content: '💻';
   background-image: none;
 }
-div.callout-Results.callout {
-  border-left-color: #198754;
-}
-div.callout-Results.callout-style-default > .callout-header {
-  background-color: rgba(25, 135, 84, 0.13);
-}
-div.callout-Results .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
-div.callout-Results.callout-style-default .callout-icon::before, div.callout-Results.callout-titled .callout-icon::before {
-  content: '📊';
-  background-image: none;
-}
 div.callout-Pending.callout {
   border-left-color: #f0c400;
 }
@@ -145,6 +134,17 @@ div.callout-Pending.callout-style-default > .callout-header {
 div.callout-Pending .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
 div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pending.callout-titled .callout-icon::before {
   content: '⏳';
+  background-image: none;
+}
+div.callout-Results.callout {
+  border-left-color: #198754;
+}
+div.callout-Results.callout-style-default > .callout-header {
+  background-color: rgba(25, 135, 84, 0.13);
+}
+div.callout-Results .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
+div.callout-Results.callout-style-default .callout-icon::before, div.callout-Results.callout-titled .callout-icon::before {
+  content: '📊';
   background-image: none;
 }
 </style>
@@ -371,7 +371,7 @@ div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pen
 </div>
 <section id="libraries" class="level2">
 <h2 class="anchored" data-anchor-id="libraries">Libraries</h2>
-<p>The analysis uses the tidyverse and lubridate for data management and dates, <a href="https://vagishhemmige.github.io/usRds/">usRds</a> to load USRDS files and extract Medicare claims, and <a href="https://CRAN.R-project.org/package=flowchart">flowchart</a> to build the cohort so that the STROBE flow diagram and the analytic cohort come from the same code. These are the only <code>library()</code> calls in the project; other scripts rely on them.</p>
+<p>The analysis uses the <a href="https://www.tidyverse.org/">{tidyverse}</a> and <a href="https://lubridate.tidyverse.org/">{lubridate}</a> for data management and dates, <a href="https://vagishhemmige.github.io/usRds/">{usRds}</a> to load USRDS files and extract Medicare claims, and <a href="https://CRAN.R-project.org/package=flowchart">{flowchart}</a> to build the cohort so that the STROBE flow diagram and the analytic cohort come from the same code. These are the only <code>library()</code> calls in the project; other scripts rely on them.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Click to show/hide R Code</summary>
@@ -407,7 +407,7 @@ div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pen
 </section>
 <section id="cryptococcosis-codes" class="level2">
 <h2 class="anchored" data-anchor-id="cryptococcosis-codes">Cryptococcosis codes</h2>
-<p><code>cryptococcus_ICD_list</code> holds the ICD-9-CM and ICD-10-CM diagnosis codes for cryptococcosis, stored without periods. The usRds claim functions match them exactly. <a href="../quarto/analysis-plan.html#3-case-ascertainment-and-index">Section 3 of the analysis plan</a> calls for a clinically reviewed list.</p>
+<p><code>cryptococcus_ICD_list</code> holds the ICD-9-CM and ICD-10-CM diagnosis codes for cryptococcosis, stored without periods. The {usRds} claim functions match them exactly. <a href="../quarto/analysis-plan.html#3-case-ascertainment-and-index">Section 3 of the analysis plan</a> calls for a clinically reviewed list.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Click to show/hide R Code</summary>
@@ -1219,7 +1219,7 @@ div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pen
 <span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="fu">## Libraries</span></span>
 <span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>The analysis uses the tidyverse and lubridate for data management and dates, <span class="co">[</span><span class="ot">usRds</span><span class="co">](https://vagishhemmige.github.io/usRds/)</span> to load USRDS files and extract Medicare claims, and <span class="co">[</span><span class="ot">flowchart</span><span class="co">](https://CRAN.R-project.org/package=flowchart)</span> to build the cohort so that the STROBE flow diagram and the analytic cohort come from the same code. These are the only <span class="in">`library()`</span> calls in the project; other scripts rely on them.</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>The analysis uses the <span class="co">[</span><span class="ot">{tidyverse}</span><span class="co">](https://www.tidyverse.org/)</span> and <span class="co">[</span><span class="ot">{lubridate}</span><span class="co">](https://lubridate.tidyverse.org/)</span> for data management and dates, <span class="co">[</span><span class="ot">{usRds}</span><span class="co">](https://vagishhemmige.github.io/usRds/)</span> to load USRDS files and extract Medicare claims, and <span class="co">[</span><span class="ot">{flowchart}</span><span class="co">](https://CRAN.R-project.org/package=flowchart)</span> to build the cohort so that the STROBE flow diagram and the analytic cohort come from the same code. These are the only <span class="in">`library()`</span> calls in the project; other scripts rely on them.</span>
 <span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
 <span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: libraries</span></span>
@@ -1243,7 +1243,7 @@ div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pen
 <span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a><span class="fu">## Cryptococcosis codes</span></span>
 <span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a><span class="in">`cryptococcus_ICD_list`</span> holds the ICD-9-CM and ICD-10-CM diagnosis codes for cryptococcosis, stored without periods. The usRds claim functions match them exactly. <span class="co">[</span><span class="ot">Section 3 of the analysis plan</span><span class="co">](analysis-plan.qmd#3-case-ascertainment-and-index)</span> calls for a clinically reviewed list.</span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a><span class="in">`cryptococcus_ICD_list`</span> holds the ICD-9-CM and ICD-10-CM diagnosis codes for cryptococcosis, stored without periods. The {usRds} claim functions match them exactly. <span class="co">[</span><span class="ot">Section 3 of the analysis plan</span><span class="co">](analysis-plan.qmd#3-case-ascertainment-and-index)</span> calls for a clinically reviewed list.</span>
 <span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
 <span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: icd-code-lists</span></span>

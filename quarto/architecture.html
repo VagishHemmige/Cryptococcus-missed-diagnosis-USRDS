@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-66ae90e4418e9d0ac3caa4b8c3bef75c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-9c6fd4a99ff4209dd1149a1765198857.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script src="../site_libs/quarto-contrib/issue-comments-0.3.0/issue-comments.js"></script>
 <link href="../site_libs/quarto-contrib/issue-comments-0.3.0/issue-comments.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
@@ -128,17 +128,6 @@ div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pen
   content: '⏳';
   background-image: none;
 }
-div.callout-Results.callout {
-  border-left-color: #198754;
-}
-div.callout-Results.callout-style-default > .callout-header {
-  background-color: rgba(25, 135, 84, 0.13);
-}
-div.callout-Results .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
-div.callout-Results.callout-style-default .callout-icon::before, div.callout-Results.callout-titled .callout-icon::before {
-  content: '📊';
-  background-image: none;
-}
 div.callout-Rcode.callout {
   border-left-color: #d63384;
 }
@@ -148,6 +137,17 @@ div.callout-Rcode.callout-style-default > .callout-header {
 div.callout-Rcode .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
 div.callout-Rcode.callout-style-default .callout-icon::before, div.callout-Rcode.callout-titled .callout-icon::before {
   content: '💻';
+  background-image: none;
+}
+div.callout-Results.callout {
+  border-left-color: #198754;
+}
+div.callout-Results.callout-style-default > .callout-header {
+  background-color: rgba(25, 135, 84, 0.13);
+}
+div.callout-Results .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
+div.callout-Results.callout-style-default .callout-icon::before, div.callout-Results.callout-titled .callout-icon::before {
+  content: '📊';
   background-image: none;
 }
 </style>
@@ -389,8 +389,8 @@ It reads only ARCHITECTURE.md, never data, and runs no analysis code.
 <li>a cohort-construction script</li>
 <li>a figures script</li>
 </ol>
-<p>All USRDS file access goes through the usRds package. Cohort inclusions and exclusions are recorded with the flowchart package, so the participant flowchart is produced directly from the cohort-building code.</p>
-<p>Every object lives in the global environment of the session. The pipeline writes nothing to disk: no intermediate files, and no exported tables or figures. Restricted data are read from the USRDS data directory configured for usRds and stay in memory.</p>
+<p>All USRDS file access goes through the <a href="https://vagishhemmige.github.io/usRds/">{usRds}</a> package. Cohort inclusions and exclusions are recorded with the <a href="https://bruigtp.github.io/flowchart/">{flowchart}</a> package, so the participant flowchart is produced directly from the cohort-building code.</p>
+<p>Every object lives in the global environment of the session. The pipeline writes nothing to disk: no intermediate files, and no exported tables or figures. Restricted data are read from the USRDS data directory configured for {usRds} and stay in memory.</p>
 <p><strong>Current scope.</strong> The code builds a cohort of kidney transplant recipients with a cryptococcosis claim and draws its flowchart. Not yet implemented:</p>
 <ul>
 <li>the missed-opportunity algorithm</li>
@@ -507,10 +507,10 @@ It reads only ARCHITECTURE.md, never data, and runs no analysis code.
 </ul>
 <p><strong>External functions:</strong></p>
 <ul>
-<li>usRds: <code>load_usrds_file()</code>, <code>get_IN_ICD()</code>, <code>get_PS_ICD()</code>, <code>verify_medicare_primary()</code></li>
+<li>{usRds}: <code>load_usrds_file()</code>, <code>get_IN_ICD()</code>, <code>get_PS_ICD()</code>, <code>verify_medicare_primary()</code></li>
 <li>flowchart: <code>as_fc()</code>, <code>fc_filter()</code></li>
 </ul>
-<p><strong>Interactions:</strong> takes constants and code lists from setup, and reads the USRDS files through usRds. Passes <code>patients_fc</code> to figures.</p>
+<p><strong>Interactions:</strong> takes constants and code lists from setup, and reads the USRDS files through {usRds}. Passes <code>patients_fc</code> to figures.</p>
 </section>
 <section id="figures" class="level3">
 <h3 class="anchored" data-anchor-id="figures">Figures</h3>
@@ -524,10 +524,6 @@ It reads only ARCHITECTURE.md, never data, and runs no analysis code.
 <section id="external-dependencies" class="level2">
 <h2 class="anchored" data-anchor-id="external-dependencies">External dependencies</h2>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
 <thead>
 <tr class="header">
 <th>Dependency</th>
@@ -536,7 +532,7 @@ It reads only ARCHITECTURE.md, never data, and runs no analysis code.
 </thead>
 <tbody>
 <tr class="odd">
-<td>usRds</td>
+<td>{usRds}</td>
 <td>Locates and reads USRDS files; extracts claims by ICD code; checks Medicare primary coverage. All data access goes through it.</td>
 </tr>
 <tr class="even">
@@ -544,12 +540,12 @@ It reads only ARCHITECTURE.md, never data, and runs no analysis code.
 <td>Records cohort filtering steps and draws the participant flowchart</td>
 </tr>
 <tr class="odd">
-<td>tidyverse, lubridate</td>
+<td><a href="https://www.tidyverse.org/">{tidyverse}</a>, <a href="https://lubridate.tidyverse.org/">{lubridate}</a></td>
 <td>Data manipulation and dates</td>
 </tr>
 <tr class="even">
 <td>USRDS data directory</td>
-<td>The restricted source files, outside the repository. Its location is set through usRds outside this code; no script sets it.</td>
+<td>The restricted source files, outside the repository. Its location is set through {usRds} outside this code; no script sets it.</td>
 </tr>
 </tbody>
 </table>
@@ -558,13 +554,13 @@ It reads only ARCHITECTURE.md, never data, and runs no analysis code.
 <h2 class="anchored" data-anchor-id="configuration">Configuration</h2>
 <ul>
 <li><strong>Analysis constants:</strong> in <code>R/setup.R</code> (see Setup above). Flowchart labels in <code>create_cohort.R</code> still hard-code the claim years and the 365-day look-back, so they do not follow the constants.</li>
-<li><strong>Data location:</strong> set through usRds’s own configuration, not in this repository.</li>
+<li><strong>Data location:</strong> set through {usRds}’s own configuration, not in this repository.</li>
 <li><strong>Ignored files:</strong> <code>.gitignore</code> covers RStudio and session files (<code>.Rproj.user</code>, <code>.Rhistory</code>, <code>.Rdata</code>), <code>.DS_Store</code>, <code>.httr-oauth</code>, and <code>.quarto</code>.</li>
 </ul>
 </section>
 <section id="chunk-labels" class="level2">
 <h2 class="anchored" data-anchor-id="chunk-labels">Chunk labels</h2>
-<p>Each script is divided into sections marked <code>## ---- label</code>, so that Quarto documents can load them with <code>knitr::read_chunk()</code>. The labels in each script are listed under Components above. No Quarto documents exist yet. <code>README.Rmd</code> is the unedited usethis template, and it renders <code>README.md</code> together with an example figure in <code>README_files/</code>.</p>
+<p>Each script is divided into sections marked <code>## ---- label</code>, so that Quarto documents can load them with <code>knitr::read_chunk()</code>. The labels in each script are listed under Components above. No Quarto documents exist yet. <code>README.Rmd</code> is the unedited <a href="https://usethis.r-lib.org/">{usethis}</a> template, and it renders <code>README.md</code> together with an example figure in <code>README_files/</code>.</p>
 </section>
 <section id="code-references" class="level2">
 <h2 class="anchored" data-anchor-id="code-references">Code references</h2>
@@ -654,7 +650,7 @@ It reads only ARCHITECTURE.md, never data, and runs no analysis code.
 </tr>
 <tr class="odd">
 <td><code>HCFASAF</code></td>
-<td>The claim-type variable on claims returned by usRds</td>
+<td>The claim-type variable on claims returned by {usRds}</td>
 </tr>
 <tr class="even">
 <td>Index date</td>

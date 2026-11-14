@@ -82,7 +82,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-66ae90e4418e9d0ac3caa4b8c3bef75c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-9c6fd4a99ff4209dd1149a1765198857.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script src="../site_libs/quarto-contrib/issue-comments-0.3.0/issue-comments.js"></script>
 <link href="../site_libs/quarto-contrib/issue-comments-0.3.0/issue-comments.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
@@ -113,6 +113,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 <style>
+div.callout-Pending.callout {
+  border-left-color: #f0c400;
+}
+div.callout-Pending.callout-style-default > .callout-header {
+  background-color: rgba(240, 196, 0, 0.13);
+}
+div.callout-Pending .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
+div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pending.callout-titled .callout-icon::before {
+  content: '⏳';
+  background-image: none;
+}
 div.callout-Rcode.callout {
   border-left-color: #d63384;
 }
@@ -133,17 +144,6 @@ div.callout-Results.callout-style-default > .callout-header {
 div.callout-Results .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
 div.callout-Results.callout-style-default .callout-icon::before, div.callout-Results.callout-titled .callout-icon::before {
   content: '📊';
-  background-image: none;
-}
-div.callout-Pending.callout {
-  border-left-color: #f0c400;
-}
-div.callout-Pending.callout-style-default > .callout-header {
-  background-color: rgba(240, 196, 0, 0.13);
-}
-div.callout-Pending .callout-toggle::before {  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="rgb(33, 37, 41)" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');}
-div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pending.callout-titled .callout-icon::before {
-  content: '⏳';
   background-image: none;
 }
 </style>
@@ -361,7 +361,7 @@ div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pen
 </section>
 <section id="this-repository" class="level2">
 <h2 class="anchored" data-anchor-id="this-repository">This repository</h2>
-<p><code>R/main.R</code> runs the scripts in order: setup, cohort construction, and figures. The data come from the United States Renal Data System (USRDS), including its linked Medicare claims, loaded through the <a href="https://vagishhemmige.github.io/usRds/">usRds</a> package. USRDS data are restricted under a data use agreement, so they are not in the repository; the code runs only where an authorized person has access to them.</p>
+<p><code>R/main.R</code> runs the scripts in order: setup, cohort construction, and figures. The data come from the United States Renal Data System (USRDS), including its linked Medicare claims, loaded through the <a href="https://vagishhemmige.github.io/usRds/">{usRds}</a> package. USRDS data are restricted under a data use agreement, so they are not in the repository; the code runs only where an authorized person has access to them.</p>
 <p>Contributions follow the rules in <a href="../quarto/agents.html"><code>AGENTS.md</code></a>; known issues and open decisions are tracked in <a href="https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/issues">Issues</a>.</p>
 </section>
 <section id="how-this-website-was-created" class="level2">
@@ -866,7 +866,7 @@ div.callout-Pending.callout-style-default .callout-icon::before, div.callout-Pen
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">## This repository</span></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="in">`R/main.R`</span> runs the scripts in order: setup, cohort construction, and figures. The data come from the United States Renal Data System (USRDS), including its linked Medicare claims, loaded through the <span class="co">[</span><span class="ot">usRds</span><span class="co">](https://vagishhemmige.github.io/usRds/)</span> package. USRDS data are restricted under a data use agreement, so they are not in the repository; the code runs only where an authorized person has access to them.</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="in">`R/main.R`</span> runs the scripts in order: setup, cohort construction, and figures. The data come from the United States Renal Data System (USRDS), including its linked Medicare claims, loaded through the <span class="co">[</span><span class="ot">{usRds}</span><span class="co">](https://vagishhemmige.github.io/usRds/)</span> package. USRDS data are restricted under a data use agreement, so they are not in the repository; the code runs only where an authorized person has access to them.</span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>Contributions follow the rules in <span class="co">[</span><span class="ot">`AGENTS.md`</span><span class="co">](agents.qmd)</span>; known issues and open decisions are tracked in <span class="co">[</span><span class="ot">Issues</span><span class="co">](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/issues)</span>.</span>
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>

@@ -1,582 +1,5 @@
 [
   {
-    "objectID": "quarto/architecture.html",
-    "href": "quarto/architecture.html",
-    "title": "",
-    "section": "",
-    "text": "Project documentsArchitecture Code",
-    "crumbs": [
-      "Project documents",
-      "Architecture"
-    ]
-  },
-  {
-    "objectID": "quarto/architecture.html#overview",
-    "href": "quarto/architecture.html#overview",
-    "title": "",
-    "section": "Overview",
-    "text": "Overview\nThe analysis is a set of R scripts that run in sequence in one R session. R/main.R is the only entry point. It sources:\n\na setup script (libraries, constants, code lists)\na cohort-construction script\na figures script\n\nAll USRDS file access goes through the usRds package. Cohort inclusions and exclusions are recorded with the flowchart package, so the participant flowchart is produced directly from the cohort-building code.\nEvery object lives in the global environment of the session. The pipeline writes nothing to disk: no intermediate files, and no exported tables or figures. Restricted data are read from the USRDS data directory configured for usRds and stay in memory.\nCurrent scope. The code builds a cohort of kidney transplant recipients with a cryptococcosis claim and draws its flowchart. Not yet implemented:\n\nthe missed-opportunity algorithm\ncomorbidities\nmortality and geographic analyses\nany Quarto documents",
-    "crumbs": [
-      "Project documents",
-      "Architecture"
-    ]
-  },
-  {
-    "objectID": "quarto/architecture.html#architecture-diagram",
-    "href": "quarto/architecture.html#architecture-diagram",
-    "title": "",
-    "section": "Architecture diagram",
-    "text": "Architecture diagram\n\n\n\n\n\nflowchart TD\n    M[R/main.R&lt;br/&gt;entry point] --&gt; S[R/setup.R]\n    M --&gt; C[R/create_cohort.R]\n    M --&gt; F[R/figures.R]\n\n    S -- \"constants, code lists\" --&gt; C\n    C -- \"patients_fc\" --&gt; F\n\n    U[[usRds package]] --&gt; C\n    D[(USRDS data directory&lt;br/&gt;restricted, outside repo)] --&gt; U\n\n    F --&gt; O[Flowchart drawn in session&lt;br/&gt;not saved]",
-    "crumbs": [
-      "Project documents",
-      "Architecture"
-    ]
-  },
-  {
-    "objectID": "quarto/architecture.html#data-flow",
-    "href": "quarto/architecture.html#data-flow",
-    "title": "",
-    "section": "Data flow",
-    "text": "Data flow\n\n\n\n\n\nflowchart LR\n    P[(patients)] --&gt; R1[patients_raw]\n    R1 --&gt;|\"as_fc + fc_filter:&lt;br/&gt;any transplant\"| FC1[patients_fc]\n    FC1 --&gt;|\"IDs\"| IDS[transplant_id_list]\n    IDS --&gt; CL[(IN and PS claims)]\n    CL --&gt;|\"get_IN_ICD + get_PS_ICD\"| CC[cryptococcus_claims_df]\n    CC --&gt;|\"earliest claim per patient\"| CD[cryptococcus_df]\n    CD --&gt;|\"join to $data\"| FC2[patients_fc]\n    FC2 --&gt;|\"fc_filter: has claim;&lt;br/&gt;after first transplant\"| FC3[patients_fc]\n    PH[(payhist)] --&gt;|\"verify_medicare_primary\"| FC4\n    FC3 --&gt; FC4[patients_fc&lt;br/&gt;+ coverage columns]\n    FC4 --&gt;|\"fc_filter: Medicare primary on date;&lt;br/&gt;coverage ≥ lookback\"| FC5[patients_fc]\n    RES[(residenc)] --&gt;|\"interval join on index date\"| FC6[patients_fc&lt;br/&gt;+ ZIP code]\n    FC5 --&gt; FC6\n    TX[(tx)] --&gt; TD[transplant_df]\n    FAC[(facility)] --&gt; FA[facility]\n    TD --&gt; TJ[transplant_joined]\n    FA --&gt; TJ\n    FC6 --&gt; FIG[fc_draw in figures.R]\n\n\n\n\n\n\ntransplant_df, facility, and transplant_joined are built, but they are not yet joined to the cohort. They are dead ends in the current flow.\nHow the cohort moves through create_cohort.R:\n\nBase population. Load the USRDS patient file, dropping the ZIP code recorded when the patient entered USRDS. Wrap it in a flowchart object, then keep patients with at least one transplant.\nCase finding. Collect the IDs of the patients still in the cohort. Pull institutional and physician/supplier claims that carry a code from the cryptococcosis list, for the claim years in the constants. Combine the two sources, then keep each patient’s earliest claim date as first_cryptococcus_date.\nAttach and filter. Join that date to the flowchart’s data with a one-to-one join. Then apply two flowchart filters: the patient has a claim, and the claim falls after the first transplant date.\nMedicare coverage. verify_medicare_primary() adds the start and end dates of the Medicare primary coverage span that contains the index date, plus a TRUE/FALSE flag for whether that span covers the look-back period. A duplicate check stops the run if the join multiplied rows. Two flowchart filters then apply the coverage criteria.\nResidence. An interval join adds the ZIP code valid on the index date, followed by a duplicate check. Patients with no matching residence period are kept, with a missing ZIP code.\nTransplant and facility (not connected). Builds a per-transplant table with the date of the next transplant (a far-future placeholder when there is none), and joins each transplant to facility records by provider and year.\n\nfigures.R then draws the flowchart from the final patients_fc.",
-    "crumbs": [
-      "Project documents",
-      "Architecture"
-    ]
-  },
-  {
-    "objectID": "quarto/architecture.html#components",
-    "href": "quarto/architecture.html#components",
-    "title": "",
-    "section": "Components",
-    "text": "Components\n\nEntry point\nPurpose: runs the full pipeline in dependency order.\nLocation: R/main.R\nInteractions: sources R/setup.R, R/create_cohort.R, and R/figures.R, in that order, from the project root.\n\n\nSetup\nPurpose: loads every library, and defines the constants and code lists that the other scripts use.\nLocation: R/setup.R\nLabelled sections: libraries, constants, icd-code-lists, missed-diagnosis-code-maps\nKey objects:\n\nclaim_years: the claim years searched\nlookback_days: the days of Medicare primary coverage required before the index date\nicd10_start_date: the date ICD-10 coding begins (defined but not used yet)\ncryptococcus_ICD_list: the ICD-9 and ICD-10 case-finding codes, matched exactly\nicd9_map, icd10_map, and icd_combined_map: symptom, condition, and procedure codes for possible earlier presentations, by category and code type (not used yet)\n\nInteractions: provides constants and code lists to create_cohort.R. Nothing upstream.\n\n\nCohort construction\nPurpose: builds the analytic cohort and records each inclusion step in the flowchart.\nLocation: R/create_cohort.R\nLabelled sections: load-usrds-files, initialize-flowchart, cryptococcus-claims, develop-flowchart, medicare-coverage, residence-transplant-facility\nKey objects:\n\npatients_fc: the flowchart object. Its $data element is the cohort, one row per patient.\ncryptococcus_claims_df: every cryptococcosis claim for transplant recipients, from both claim sources\ncryptococcus_df: the earliest cryptococcosis claim date per patient\nZIP_code_df: residence periods\ntransplant_df, facility, and transplant_joined: transplant and facility tables, not yet used downstream\n\nExternal functions:\n\nusRds: load_usrds_file(), get_IN_ICD(), get_PS_ICD(), verify_medicare_primary()\nflowchart: as_fc(), fc_filter()\n\nInteractions: takes constants and code lists from setup, and reads the USRDS files through usRds. Passes patients_fc to figures.\n\n\nFigures\nPurpose: draws the participant flowchart.\nLocation: R/figures.R\nLabelled sections: final-flowchart\nExternal functions: flowchart’s fc_draw()\nInteractions: takes patients_fc from cohort construction. The diagram is drawn in the session and not exported.",
-    "crumbs": [
-      "Project documents",
-      "Architecture"
-    ]
-  },
-  {
-    "objectID": "quarto/architecture.html#external-dependencies",
-    "href": "quarto/architecture.html#external-dependencies",
-    "title": "",
-    "section": "External dependencies",
-    "text": "External dependencies\n\n\n\n\n\n\n\nDependency\nRole\n\n\n\n\nusRds\nLocates and reads USRDS files; extracts claims by ICD code; checks Medicare primary coverage. All data access goes through it.\n\n\nflowchart\nRecords cohort filtering steps and draws the participant flowchart\n\n\ntidyverse, lubridate\nData manipulation and dates\n\n\nUSRDS data directory\nThe restricted source files, outside the repository. Its location is set through usRds outside this code; no script sets it.",
-    "crumbs": [
-      "Project documents",
-      "Architecture"
-    ]
-  },
-  {
-    "objectID": "quarto/architecture.html#configuration",
-    "href": "quarto/architecture.html#configuration",
-    "title": "",
-    "section": "Configuration",
-    "text": "Configuration\n\nAnalysis constants: in R/setup.R (see Setup above). Flowchart labels in create_cohort.R still hard-code the claim years and the 365-day look-back, so they do not follow the constants.\nData location: set through usRds’s own configuration, not in this repository.\nIgnored files: .gitignore covers RStudio and session files (.Rproj.user, .Rhistory, .Rdata), .DS_Store, .httr-oauth, and .quarto.",
-    "crumbs": [
-      "Project documents",
-      "Architecture"
-    ]
-  },
-  {
-    "objectID": "quarto/architecture.html#chunk-labels",
-    "href": "quarto/architecture.html#chunk-labels",
-    "title": "",
-    "section": "Chunk labels",
-    "text": "Chunk labels\nEach script is divided into sections marked ## ---- label, so that Quarto documents can load them with knitr::read_chunk(). The labels in each script are listed under Components above. No Quarto documents exist yet. README.Rmd is the unedited usethis template, and it renders README.md together with an example figure in README_files/.",
-    "crumbs": [
-      "Project documents",
-      "Architecture"
-    ]
-  },
-  {
-    "objectID": "quarto/architecture.html#code-references",
-    "href": "quarto/architecture.html#code-references",
-    "title": "",
-    "section": "Code references",
-    "text": "Code references\n\n\n\n\n\n\n\n\nComponent\nFile\nKey symbols\n\n\n\n\nEntry point\nR/main.R\nsource() calls\n\n\nConstants\nR/setup.R\nclaim_years, lookback_days, icd10_start_date\n\n\nCode lists\nR/setup.R\ncryptococcus_ICD_list, icd9_map, icd10_map, icd_combined_map\n\n\nCohort and flowchart\nR/create_cohort.R\npatients_raw, patients_fc, fc_filter()\n\n\nCase finding\nR/create_cohort.R\nget_IN_ICD(), get_PS_ICD(), cryptococcus_claims_df, cryptococcus_df\n\n\nCoverage\nR/create_cohort.R\nverify_medicare_primary(), medicare_primary_TF, coverage_start_date, coverage_end_date\n\n\nResidence\nR/create_cohort.R\nZIP_code_df\n\n\nTransplant and facility\nR/create_cohort.R\ntransplant_df, facility, transplant_joined\n\n\nFlowchart figure\nR/figures.R\nfc_draw()",
-    "crumbs": [
-      "Project documents",
-      "Architecture"
-    ]
-  },
-  {
-    "objectID": "quarto/architecture.html#glossary",
-    "href": "quarto/architecture.html#glossary",
-    "title": "",
-    "section": "Glossary",
-    "text": "Glossary\n\n\n\n\n\n\n\nTerm\nMeaning in this repository\n\n\n\n\nIN claims\nUSRDS institutional claims: inpatient, outpatient, SNF, home health, and hospice. Not inpatient only.\n\n\nPS claims\nUSRDS physician/supplier claims\n\n\nHCFASAF\nThe claim-type variable on claims returned by usRds\n\n\nIndex date\nCurrently first_cryptococcus_date, the earliest cryptococcosis claim of any type. analysis-plan.md defines the intended index date.\n\n\npatients_fc\nThe flowchart object. patients_fc$data is the cohort, and its filter history becomes the flowchart.\n\n\nLook-back\nThe days of continuous Medicare primary coverage required before the index date (lookback_days)",
-    "crumbs": [
-      "Project documents",
-      "Architecture"
-    ]
-  },
-  {
-    "objectID": "quarto/setup.html",
-    "href": "quarto/setup.html",
-    "title": "Setup",
-    "section": "",
-    "text": "This script attaches the packages and defines the constants and code lists that every other script uses. R/main.R sources it first.",
-    "crumbs": [
-      "Code",
-      "Setup and helper functions",
-      "Setup"
-    ]
-  },
-  {
-    "objectID": "quarto/setup.html#libraries",
-    "href": "quarto/setup.html#libraries",
-    "title": "Setup",
-    "section": "Libraries",
-    "text": "Libraries\nThe analysis uses the tidyverse and lubridate for data management and dates, usRds to load USRDS files and extract Medicare claims, and flowchart to build the cohort so that the STROBE flow diagram and the analytic cohort come from the same code. These are the only library() calls in the project; other scripts rely on them.\n\n\nClick to show/hide R Code\n#Data management libraries\nlibrary(tidyverse)\nlibrary(lubridate)\n\n#Core library for the USRDS\nlibrary(usRds)\n\n#Flowchart library\nlibrary(flowchart)",
-    "crumbs": [
-      "Code",
-      "Setup and helper functions",
-      "Setup"
-    ]
-  },
-  {
-    "objectID": "quarto/setup.html#constants",
-    "href": "quarto/setup.html#constants",
-    "title": "Setup",
-    "section": "Constants",
-    "text": "Constants\nNumbers a reader might want to change live here as named constants, so downstream scripts and flowchart labels use one definition:\n\nclaim_years: the calendar years of institutional (IN) and physician/supplier (PS) claims searched for cryptococcosis.\nlookback_days: the days of Medicare primary coverage required before the first cryptococcosis claim.\nicd10_start_date: the ICD-9-CM to ICD-10 transition date. It is defined but not yet used by any script.\n\nThe plan sets index-date eligibility from the date range in which claims are complete for the release analyzed (analysis plan, section 2); claim_years is the current code’s fixed range.\n\n\nClick to show/hide R Code\nclaim_years &lt;- 2006:2021                   #Years of IN and PS claims searched\nlookback_days &lt;- 365                       #Days of Medicare primary coverage required before the first cryptococcus claim\nicd10_start_date &lt;- as.Date(\"2015-10-01\")  #ICD-9-CM before this date, ICD-10-CM/PCS on or after",
-    "crumbs": [
-      "Code",
-      "Setup and helper functions",
-      "Setup"
-    ]
-  },
-  {
-    "objectID": "quarto/setup.html#cryptococcosis-codes",
-    "href": "quarto/setup.html#cryptococcosis-codes",
-    "title": "Setup",
-    "section": "Cryptococcosis codes",
-    "text": "Cryptococcosis codes\ncryptococcus_ICD_list holds the ICD-9-CM and ICD-10-CM diagnosis codes for cryptococcosis, stored without periods. The usRds claim functions match them exactly. Section 3 of the analysis plan calls for a clinically reviewed list.\n\n\nClick to show/hide R Code\n#ICD-9 and ICD-10 codes for cryptococcus (matched exactly by get_IN_ICD and get_PS_ICD)\ncryptococcus_ICD_list &lt;- c(\"1175\", \"3210\", \"B450\", \"B451\", \"B452\", \"B453\", \"B457\", \"B458\", \"B459\")",
-    "crumbs": [
-      "Code",
-      "Setup and helper functions",
-      "Setup"
-    ]
-  },
-  {
-    "objectID": "quarto/setup.html#missed-opportunity-code-maps",
-    "href": "quarto/setup.html#missed-opportunity-code-maps",
-    "title": "Setup",
-    "section": "Missed-opportunity code maps",
-    "text": "Missed-opportunity code maps\nicd9_map and icd10_map list the diagnosis and procedure codes for the categories that could signal an earlier presentation of cryptococcosis: lumbar puncture, increased intracranial pressure, brain infection, encephalopathy, headache, focal neurological deficit, stroke, pneumonia, pleural and mediastinal disease, signs of infection, and infection not otherwise specified. Each row records the category, whether the code is a diagnosis or a procedure, and the code. icd_combined_map stacks the two. No script uses the maps yet; they are the starting point for the opportunity ascertainment in sections 5 and 6 of the plan, which requires clinically reviewed, era-appropriate exact or prefix rules.\n\n\nClick to show/hide R Code\n#ICD-9 and ICD-10 code maps for possible earlier presentations of cryptococcus\nicd9_map &lt;- tribble(\n  ~category, ~code_type,   ~icd_code,\n  \n  # Lumbar puncture\n  \"Lumbar Puncture\", \"procedure\", \"0331\",\n  \n  # Increased intracranial pressure\n  \"Increased Intracranial Pressure\", \"diagnosis\", \"3313\",\n  \"Increased Intracranial Pressure\", \"diagnosis\", \"3314\",\n  \"Increased Intracranial Pressure\", \"diagnosis\", \"3315\",\n  \"Increased Intracranial Pressure\", \"procedure\", \"8891\",\n  \n  # Brain infection\n  \"Brain Infection\", \"diagnosis\", \"0479\",\n  \"Brain Infection\", \"diagnosis\", \"3207\",\n  \"Brain Infection\", \"diagnosis\", \"3209\",\n  \"Brain Infection\", \"diagnosis\", \"3214\",\n  \"Brain Infection\", \"diagnosis\", \"3222\",\n  \"Brain Infection\", \"diagnosis\", \"3229\",\n  \"Brain Infection\", \"diagnosis\", \"32382\",\n  \"Brain Infection\", \"diagnosis\", \"326\",\n  \"Brain Infection\", \"diagnosis\", \"V1242\",\n  \"Brain Infection\", \"procedure\", \"8893\",\n  \n  # Encephalopathy\n  \"Encephalopathy\", \"diagnosis\", \"07020\",\n  \"Encephalopathy\", \"diagnosis\", \"07021\",\n  \"Encephalopathy\", \"diagnosis\", \"07022\",\n  \"Encephalopathy\", \"diagnosis\", \"07044\",\n  \"Encephalopathy\", \"diagnosis\", \"07071\",\n  \"Encephalopathy\", \"diagnosis\", \"2903\",\n  \"Encephalopathy\", \"diagnosis\", \"2931\",\n  \"Encephalopathy\", \"diagnosis\", \"2989\",\n  \"Encephalopathy\", \"diagnosis\", \"3238\",\n  \"Encephalopathy\", \"diagnosis\", \"32381\",\n  \"Encephalopathy\", \"diagnosis\", \"334830\",\n  \"Encephalopathy\", \"diagnosis\", \"34831\",\n  \"Encephalopathy\", \"diagnosis\", \"34839\",\n  \"Encephalopathy\", \"diagnosis\", \"34982\",\n  \"Encephalopathy\", \"diagnosis\", \"5722\",\n  \"Encephalopathy\", \"diagnosis\", \"78001\",\n  \"Encephalopathy\", \"diagnosis\", \"78009\",\n  \"Encephalopathy\", \"diagnosis\", \"7801\",\n  \"Encephalopathy\", \"diagnosis\", \"78097\",\n  \"Encephalopathy\", \"procedure\", \"0222\",\n  \"Encephalopathy\", \"procedure\", \"0232\",\n  \"Encephalopathy\", \"procedure\", \"0234\",\n  \"Encephalopathy\", \"procedure\", \"0242\",\n  \"Encephalopathy\", \"procedure\", \"0243\",\n  \n  # Headache\n  \"Headache\", \"diagnosis\", \"30781\",\n  \"Headache\", \"diagnosis\", \"3393\",\n  \"Headache\", \"diagnosis\", \"34610\",\n  \"Headache\", \"diagnosis\", \"34670\",\n  \"Headache\", \"diagnosis\", \"34690\",\n  \"Headache\", \"diagnosis\", \"34691\",\n  \"Headache\", \"diagnosis\", \"7840\",\n  \"Headache\", \"procedure\", \"0112\",\n  \"Headache\", \"procedure\", \"0390\",\n  \n  # Focal neurological deficit\n  \"Focal Neurological Deficit\", \"diagnosis\", \"3688\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"38912\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"3899\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"43884\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7802\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"78039\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7804\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7810\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7812\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7813\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7843\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7845\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0110\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0113\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0114\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0128\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0131\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0139\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0159\",\n  \"Focal Neurological Deficit\", \"procedure\", \"022\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0309\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0392\",\n  \n  # Stroke\n  \"Stroke\", \"diagnosis\", \"4358\",\n  \"Stroke\", \"diagnosis\", \"4359\",\n  \"Stroke\", \"diagnosis\", \"V1254\",\n  \"Stroke\", \"procedure\", \"0151\",\n  \n  # Other neurological\n  \"Other\", \"diagnosis\", \"3485\",\n  \"Other\", \"diagnosis\", \"34889\",\n  \"Other\", \"diagnosis\", \"3489\",\n  \"Other\", \"diagnosis\", \"3481\",\n  \n  # Pneumonia NOS\n  \"Pneumonia NOS\", \"diagnosis\", \"4838\",\n  \"Pneumonia NOS\", \"diagnosis\", \"4847\",\n  \"Pneumonia NOS\", \"diagnosis\", \"485\",\n  \"Pneumonia NOS\", \"diagnosis\", \"486\",\n  \"Pneumonia NOS\", \"diagnosis\", \"490\",\n  \"Pneumonia NOS\", \"diagnosis\", \"49322\",\n  \"Pneumonia NOS\", \"diagnosis\", \"4940\",\n  \"Pneumonia NOS\", \"diagnosis\", \"496\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51636\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5168\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51681\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51682\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51689\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5169\",\n  \"Pneumonia NOS\", \"diagnosis\", \"517\",\n  \"Pneumonia NOS\", \"diagnosis\", \"518\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5180\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5181\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5182\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5183\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5184\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5185\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5186\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5187\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5188\",\n  \n  \"Pneumonia NOS\", \"diagnosis\", \"51881\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51882\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51883\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51884\",\n  \n  \"Pneumonia NOS\", \"diagnosis\", \"71481\",\n  \"Pneumonia NOS\", \"diagnosis\", \"78605\",\n  \"Pneumonia NOS\", \"diagnosis\", \"78609\",\n  \"Pneumonia NOS\", \"diagnosis\", \"7862\",\n  \"Pneumonia NOS\", \"diagnosis\", \"7931\",\n  \"Pneumonia NOS\", \"diagnosis\", \"79311\",\n  \"Pneumonia NOS\", \"diagnosis\", \"V1261\",\n  \"Pneumonia NOS\", \"procedure\", \"3220\",\n  \"Pneumonia NOS\", \"procedure\", \"3229\",\n  \"Pneumonia NOS\", \"procedure\", \"3230\",\n  \"Pneumonia NOS\", \"procedure\", \"3249\",\n  \"Pneumonia NOS\", \"procedure\", \"3321\",\n  \"Pneumonia NOS\", \"procedure\", \"3322\",\n  \"Pneumonia NOS\", \"procedure\", \"3323\",\n  \"Pneumonia NOS\", \"procedure\", \"3324\",\n  \"Pneumonia NOS\", \"procedure\", \"3326\",\n  \"Pneumonia NOS\", \"procedure\", \"3327\",\n  \"Pneumonia NOS\", \"procedure\", \"3328\",\n  \n  # Pleural disease\n  \"Pleural Disease\", \"diagnosis\", \"5119\",\n  \"Pleural Disease\", \"procedure\", \"3404\",\n  \"Pleural Disease\", \"procedure\", \"3406\",\n  \"Pleural Disease\", \"procedure\", \"3491\",\n  \"Pleural Disease\", \"procedure\", \"8873\",\n  \n  # Mediastinal\n  \"Mediastinal Diagnosis\", \"procedure\", \"3422\",\n  \n  # Other pulmonary\n  \"Other\", \"diagnosis\", \"51889\",\n  \"Other\", \"diagnosis\", \"78652\",\n  \n  # Signs and symptoms of infection\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"7806\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"78060\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"78061\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"78079\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"7850\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"7856\",\n  \n  # Infection NOS\n  \"Infection NOS\", \"diagnosis\", \"07999\",\n  \"Infection NOS\", \"diagnosis\", \"1179\",\n  \"Infection NOS\", \"diagnosis\", \"56723\",\n  \"Infection NOS\", \"diagnosis\", \"78552\",\n  \"Infection NOS\", \"diagnosis\", \"725\",\n  \"Infection NOS\", \"diagnosis\", \"99590\",\n  \"Infection NOS\", \"diagnosis\", \"99591\",\n  \"Infection NOS\", \"diagnosis\", \"99592\"\n  \n)\n\nicd10_map &lt;- tribble(\n  ~category, ~code_type,   ~icd_code,\n  \n  # ------------------------------------------------------------------\n  # Lumbar puncture (ICD-10-PCS)\n  # ------------------------------------------------------------------\n  \"Lumbar Puncture\", \"procedure\", \"009U3ZX\",  # Drainage of lumbar spinal canal, diagnostic\n  \n  # ------------------------------------------------------------------\n  # Increased intracranial pressure\n  # ------------------------------------------------------------------\n  \"Increased Intracranial Pressure\", \"diagnosis\", \"G933\",\n  \"Increased Intracranial Pressure\", \"diagnosis\", \"G934\",\n  \"Increased Intracranial Pressure\", \"diagnosis\", \"G935\",\n  \n  # ------------------------------------------------------------------\n  # Brain infection / meningitis / encephalitis\n  # ------------------------------------------------------------------\n  \"Brain Infection\", \"diagnosis\", \"G00\",\n  \"Brain Infection\", \"diagnosis\", \"G01\",\n  \"Brain Infection\", \"diagnosis\", \"G02\",\n  \"Brain Infection\", \"diagnosis\", \"G03\",\n  \"Brain Infection\", \"diagnosis\", \"G04\",\n  \"Brain Infection\", \"diagnosis\", \"A870\",     # Viral meningitis\n  \"Brain Infection\", \"diagnosis\", \"B451\",     # Cryptococcal meningitis\n  \"Brain Infection\", \"diagnosis\", \"Z8619\",    # Personal history of CNS infection\n  \n  # ------------------------------------------------------------------\n  # Encephalopathy\n  # ------------------------------------------------------------------\n  \"Encephalopathy\", \"diagnosis\", \"G931\",\n  \"Encephalopathy\", \"diagnosis\", \"G932\",\n  \"Encephalopathy\", \"diagnosis\", \"G9340\",\n  \"Encephalopathy\", \"diagnosis\", \"G9341\",\n  \"Encephalopathy\", \"diagnosis\", \"G9349\",\n  \"Encephalopathy\", \"diagnosis\", \"G9389\",\n  \"Encephalopathy\", \"diagnosis\", \"K7200\",\n  \"Encephalopathy\", \"diagnosis\", \"R410\",\n  \"Encephalopathy\", \"diagnosis\", \"R411\",\n  \"Encephalopathy\", \"diagnosis\", \"R412\",\n  \n  # ------------------------------------------------------------------\n  # Headache\n  # ------------------------------------------------------------------\n  \"Headache\", \"diagnosis\", \"R51\",\n  \"Headache\", \"diagnosis\", \"G439\",\n  \"Headache\", \"diagnosis\", \"G43809\",\n  \"Headache\", \"diagnosis\", \"G43819\",\n  \n  # ------------------------------------------------------------------\n  # Focal neurological deficit\n  # ------------------------------------------------------------------\n  \"Focal Neurological Deficit\", \"diagnosis\", \"R29810\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"R29818\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"R202\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"R252\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"R4701\",\n  \n  # ------------------------------------------------------------------\n  # Stroke / TIA\n  # ------------------------------------------------------------------\n  \"Stroke\", \"diagnosis\", \"I63\",\n  \"Stroke\", \"diagnosis\", \"I64\",\n  \"Stroke\", \"diagnosis\", \"G459\",\n  \n  # ------------------------------------------------------------------\n  # Pneumonia NOS\n  # ------------------------------------------------------------------\n  \"Pneumonia NOS\", \"diagnosis\", \"J12\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J13\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J14\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J15\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J16\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J17\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J18\",\n  \n  # Pneumonia-related respiratory failure / complications\n  \"Pneumonia NOS\", \"diagnosis\", \"J960\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J961\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J969\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J80\",     # ARDS\n  \"Pneumonia NOS\", \"diagnosis\", \"J81\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J982\",\n  \n  # Pneumonia procedures (ICD-10-PCS)\n  \"Pneumonia NOS\", \"procedure\", \"0W993ZX\",  # Thoracentesis, diagnostic\n  \"Pneumonia NOS\", \"procedure\", \"0W9B3ZX\",  # Bronchoscopy, diagnostic\n  \n  # ------------------------------------------------------------------\n  # Pleural disease\n  # ------------------------------------------------------------------\n  \"Pleural Disease\", \"diagnosis\", \"J90\",\n  \"Pleural Disease\", \"diagnosis\", \"J91\",\n  \"Pleural Disease\", \"diagnosis\", \"J92\",\n  \n  # ------------------------------------------------------------------\n  # Mediastinal\n  # ------------------------------------------------------------------\n  \"Mediastinal Diagnosis\", \"diagnosis\", \"J98\",\n  \n  # ------------------------------------------------------------------\n  # Signs and symptoms of infection\n  # ------------------------------------------------------------------\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"R509\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"R5081\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"R6510\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"R6520\",\n  \n  # ------------------------------------------------------------------\n  # Infection NOS / sepsis spectrum\n  # ------------------------------------------------------------------\n  \"Infection NOS\", \"diagnosis\", \"A419\",\n  \"Infection NOS\", \"diagnosis\", \"B999\",\n  \"Infection NOS\", \"diagnosis\", \"R6521\",\n  \"Infection NOS\", \"diagnosis\", \"Z8619\"\n)\n\nicd_combined_map &lt;- bind_rows(icd9_map, icd10_map)",
-    "crumbs": [
-      "Code",
-      "Setup and helper functions",
-      "Setup"
-    ]
-  },
-  {
-    "objectID": "quarto/about.html",
-    "href": "quarto/about.html",
-    "title": "About",
-    "section": "",
-    "text": "This study asks how often kidney transplant recipients with cryptococcosis had earlier health care encounters that may have been missed opportunities for diagnosis. The analysis is preliminary: the analysis plan is a proposal not yet adopted, and no results have been released.\n\nVagish Hemmige\nHyun ah Yoon\n\nVagish Hemmige and Hyun ah Yoon make the scientific decisions. Open decisions are listed in GitHub Issues.",
-    "crumbs": [
-      "About"
-    ]
-  },
-  {
-    "objectID": "quarto/about.html#the-study",
-    "href": "quarto/about.html#the-study",
-    "title": "About",
-    "section": "",
-    "text": "This study asks how often kidney transplant recipients with cryptococcosis had earlier health care encounters that may have been missed opportunities for diagnosis. The analysis is preliminary: the analysis plan is a proposal not yet adopted, and no results have been released.\n\nVagish Hemmige\nHyun ah Yoon\n\nVagish Hemmige and Hyun ah Yoon make the scientific decisions. Open decisions are listed in GitHub Issues.",
-    "crumbs": [
-      "About"
-    ]
-  },
-  {
-    "objectID": "quarto/about.html#this-repository",
-    "href": "quarto/about.html#this-repository",
-    "title": "About",
-    "section": "This repository",
-    "text": "This repository\nR/main.R runs the scripts in order: setup, cohort construction, and figures. The data come from the United States Renal Data System (USRDS), including its linked Medicare claims, loaded through the usRds package. USRDS data are restricted under a data use agreement, so they are not in the repository; the code runs only where an authorized person has access to them.\nContributions follow the rules in AGENTS.md; known issues and open decisions are tracked in Issues.",
-    "crumbs": [
-      "About"
-    ]
-  },
-  {
-    "objectID": "quarto/about.html#how-this-website-was-created",
-    "href": "quarto/about.html#how-this-website-was-created",
-    "title": "About",
-    "section": "How this website was created",
-    "text": "How this website was created\nThe site is built with Quarto from the analysis scripts themselves. Each code page imports the labelled sections of its script from R/ and shows them with an explanation; the site never runs the analysis, so it is built without the analysis data. A GitHub Actions workflow renders and publishes it whenever master changes.\nThe repository follows the R Analysis Workflow plugin and the layout of Cryptococcus-cost-analysis. AI assistants may help draft and review code and documentation. They never see the USRDS data, they work on synthetic data only, and every change reaches master only through a pull request a person reviews and merges.\nFour documents describe the project. In short: the plan is the scientific intent, the architecture is the workflow as implemented, and AGENTS.md holds the rules for working together.\n\nAnalysis plan: what the analysis is meant to do, and why. The question, the population, the methods, and the open decisions. Code implements it and does not redefine it.\nArchitecture: how the code does it. The scripts, the order they run in, what each needs and produces, and how data flow between them.\nAGENTS.md: how people and AI assistants work on the project. Rules for restricted data, coding, checks, proposing changes and getting a person’s approval.\nRepository blueprint: the layout every project of this kind starts from, which the architecture document then describes as built.",
-    "crumbs": [
-      "About"
-    ]
-  },
-  {
-    "objectID": "quarto/about.html#pages",
-    "href": "quarto/about.html#pages",
-    "title": "About",
-    "section": "Pages",
-    "text": "Pages\n\nSetup: packages, shared constants, and the cryptococcosis and missed-opportunity code lists.\n1. Create cohort: builds the cohort through the flowchart and attaches residence and transplant-center information.\nFigures: draws the cohort flow diagram.",
-    "crumbs": [
-      "About"
-    ]
-  },
-  {
-    "objectID": "quarto/repository-blueprint.html",
-    "href": "quarto/repository-blueprint.html",
-    "title": "",
-    "section": "",
-    "text": "Project documentsRepository blueprint Code",
-    "crumbs": [
-      "Project documents",
-      "Repository blueprint"
-    ]
-  },
-  {
-    "objectID": "quarto/repository-blueprint.html#analytical-scripts",
-    "href": "quarto/repository-blueprint.html#analytical-scripts",
-    "title": "",
-    "section": "Analytical scripts",
-    "text": "Analytical scripts\n\nR/main.R sources definitive scripts in dependency order.\nTypical workflow: setup → cohort construction → processing → modeling → outputs.\nStudy-specific scripts may be grouped into subdirectories by analytical stage.\nR/tables.R and R/figures.R may generate outputs directly or orchestrate specialized scripts.",
-    "crumbs": [
-      "Project documents",
-      "Repository blueprint"
-    ]
-  },
-  {
-    "objectID": "quarto/repository-blueprint.html#documentation",
-    "href": "quarto/repository-blueprint.html#documentation",
-    "title": "",
-    "section": "Documentation",
-    "text": "Documentation\n\nDocument definitive analytical scripts with explanatory Quarto pages; exploratory scripts need not have pages.\nUse Cryptococcus-cost-analysis as an example for Quarto supporting files, chunk imports, callouts, and formatting—not scientific methods.\nQuarto source and rendered output locations may vary by project.",
-    "crumbs": [
-      "Project documents",
-      "Repository blueprint"
-    ]
-  },
-  {
-    "objectID": "quarto/repository-blueprint.html#outputs-and-version-control",
-    "href": "quarto/repository-blueprint.html#outputs-and-version-control",
-    "title": "",
-    "section": "Outputs and version control",
-    "text": "Outputs and version control\n\nTrack approved, nonrestricted outputs when useful for publication; otherwise retain them locally and exclude them from Git.\n.gitignore: Exclude restricted data, credentials, caches, temporary files, and generated outputs unless intentionally tracked (e.g., .Rproj.user/, .Rhistory, .RData, .httr-oauth, .quarto/, cache/, figures/, tables/, *.quarto_ipynb); verify exclusions cover actual output paths without hiding necessary source or reference files.",
-    "crumbs": [
-      "Project documents",
-      "Repository blueprint"
-    ]
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Overview",
-    "section": "",
-    "text": "This analysis looks for potential missed opportunities to diagnose cryptococcosis among kidney transplant recipients in the United States. It uses the United States Renal Data System (USRDS) and its linked Medicare fee-for-service claims to find health care encounters, in the 90 days before a recipient’s first observed qualifying cryptococcosis diagnosis, that carried a relevant diagnosis or diagnostic procedure. These are claims-based potential missed opportunities, not confirmed diagnostic errors.",
-    "crumbs": [
-      "Home"
-    ]
-  },
-  {
-    "objectID": "index.html#what-this-analysis-does",
-    "href": "index.html#what-this-analysis-does",
-    "title": "Overview",
-    "section": "",
-    "text": "This analysis looks for potential missed opportunities to diagnose cryptococcosis among kidney transplant recipients in the United States. It uses the United States Renal Data System (USRDS) and its linked Medicare fee-for-service claims to find health care encounters, in the 90 days before a recipient’s first observed qualifying cryptococcosis diagnosis, that carried a relevant diagnosis or diagnostic procedure. These are claims-based potential missed opportunities, not confirmed diagnostic errors.",
-    "crumbs": [
-      "Home"
-    ]
-  },
-  {
-    "objectID": "index.html#methods",
-    "href": "index.html#methods",
-    "title": "Overview",
-    "section": "Methods",
-    "text": "Methods\nThe primary estimand is the proportion of eligible recipients with at least one qualifying encounter in days −90 through −1, reported separately for diagnosis-based, procedure-based, and combined opportunities, with Wilson 95% confidence intervals1. Secondary analyses examine associations with mortality, rurality, and distance to the transplant center. Reporting follows STROBE and RECORD2,3. The analysis plan is the authoritative specification.",
-    "crumbs": [
-      "Home"
-    ]
-  },
-  {
-    "objectID": "index.html#status",
-    "href": "index.html#status",
-    "title": "Overview",
-    "section": "Status",
-    "text": "Status\nThis analysis is preliminary. The analysis plan is a proposal that has not yet been adopted, and the code currently builds the initial cohort only. Open decisions and known gaps are tracked in GitHub Issues.",
-    "crumbs": [
-      "Home"
-    ]
-  },
-  {
-    "objectID": "quarto/figures.html",
-    "href": "quarto/figures.html",
-    "title": "Figures",
-    "section": "",
-    "text": "This script draws the figures for the manuscript. So far that is the cohort flow diagram.",
-    "crumbs": [
-      "Code",
-      "Tables and figures",
-      "Figures"
-    ]
-  },
-  {
-    "objectID": "quarto/figures.html#cohort-flowchart",
-    "href": "quarto/figures.html#cohort-flowchart",
-    "title": "Figures",
-    "section": "Cohort flowchart",
-    "text": "Cohort flowchart\nfc_draw() draws the STROBE cohort flow diagram from patients_fc, the flowchart object built step by step on the Create cohort page, so every box matches a step in the code. Before the diagram leaves the secure environment, every box is checked for counts from 1 to 10, including excluded counts that could be recovered by subtraction, under the data use agreement’s small-cell rule (see AGENTS.md, “Restricted data”). The diagram is not yet exported to figures/.\n\n\nClick to show/hide R Code\n#Draw the cohort flowchart\n#Before exporting, check that no box shows a count from 1 to 10 (CMS cell-size rule),\n#including excluded counts recoverable by subtraction\npatients_fc%&gt;%\n  fc_draw()",
-    "crumbs": [
-      "Code",
-      "Tables and figures",
-      "Figures"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html",
-    "href": "quarto/agents.html",
-    "title": "",
-    "section": "",
-    "text": "Project documentsAGENTS.md Code",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#the-project",
-    "href": "quarto/agents.html#the-project",
-    "title": "",
-    "section": "The project",
-    "text": "The project\nThis is an R analysis project, not an R package. It examines potential missed opportunities to diagnose cryptococcosis among kidney transplant recipients using USRDS and Medicare claims. The code and methods are published as a Quarto website. Do not introduce package infrastructure or impose CRAN conventions.\n\nThe analysis plan is the scientific source of truth. Code implements the plan; it does not redefine it. If implementation needs a different design, open a decision issue, or comment on the existing one, for the deciders. Once a decider has settled it (in the issue, or relayed there in their exact words), the plan change and the code can go in the same pull request, which closes the issue. Track decisions in Git history and issues rather than a change ledger within the plan.\nDeciders. Scientific decisions in every area are made by Vagish Hemmige and Hyun ah Yoon. Anyone may open or contribute to a decision issue; only a decider settles it (see “Working with agents”).\nDo not make unresolved scientific decisions implicitly through code. Check relevant open GitHub issues before implementing analyses that depend on them.\nMaintain implementation status and defects in GitHub Issues rather than in a standing list inside this file.\nDefault branch: master. Changes reach it only through pull requests.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#data-sources",
-    "href": "quarto/agents.html#data-sources",
-    "title": "",
-    "section": "Data sources",
-    "text": "Data sources\nEach source this project uses is listed below with the package that accesses it. Code that touches a source goes through its package. Do not write project-specific loading, cleaning, or definition code for something the package already does.\n\n\n\n\n\n\n\n\n\n\n\nSource\nAccessed through\nPackage documentation\nPackage maintained by\nAccess\nWhat AI agents may do\n\n\n\n\nUSRDS standard analysis files, including linked Medicare claims and payer history (release as recorded for each result)\nusRds (load_usrds_file(), get_IN_ICD(), get_PS_ICD())\nhttps://vagishhemmige.github.io/usRds/\nThis team\nRestricted (USRDS data use agreement)\nNone: code, documentation and synthetic data only\n\n\n\nTo allow more for a source, a person changes its row through a pull request, naming the agreement and section that permit it, the approved AI service, and exactly what agents may do. Agents never propose or make this change themselves, and nothing in personal instructions can grant it.\nAdd a row when code first loads a new source (for example, the USDA ZIP-code RUCA file the plan’s geographic analyses use).\nFor every package:\n\nRead its documentation before writing code for a source, including known issues. Behavior that sets the cohort, an exposure, an outcome, or a denominator is checked in the documentation, not assumed from a function’s name.\n\nFor packages this team maintains: see “Look in usRds first” below.\nFor external packages:\n\nWork around problems here. Wrap the function in R/functions.R with a comment explaining the problem and linking any upstream issue. Reporting a bug upstream is an external communication; the person directing the work decides whether to file it.\nFacts about the source that this project relies on (definitions, release quirks, suppression rules) go in references/ with a citation to the provider’s documentation, or in the plan when they shape a decision.\n\nFor a source with no package: one loading script records the download URL, the release or access date, and any processing. Verify its variables against the provider’s documentation for that release.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#exploration-and-definitive-analysis",
-    "href": "quarto/agents.html#exploration-and-definitive-analysis",
-    "title": "",
-    "section": "Exploration and definitive analysis",
-    "text": "Exploration and definitive analysis\nExploration is welcome on branches or forks. Experimental scripts need not be sourced from R/main.R or have Quarto pages, and their findings are labelled preliminary. A script becomes part of the definitive analysis when it is sourced from R/main.R; from then on every rule below applies to it.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#r-scripts",
-    "href": "quarto/agents.html#r-scripts",
-    "title": "",
-    "section": "R scripts",
-    "text": "R scripts\n\nOpen the .Rproj and run R/main.R from the project root. main.R sources definitive scripts in dependency order.\nKeep scripts focused on one analytical responsibility. Study-specific scripts may be grouped in stage-specific subdirectories. Include a short header stating the script’s role, its required upstream objects, and what it produces.\nWhen a definitive script is added or structurally reorganized, source it in main.R as appropriate and update ARCHITECTURE.md in the same pull request when the change materially affects structure or data flow. ARCHITECTURE.md describes current implementation, not planned work.\nDefine shared libraries, paths, configurable analytical constants, and their dependencies in R/setup.R. Other scripts do not call library(), re-source setup.R, or hard-code study parameters. Large, version-controlled code lists may live in separate files sourced by setup.R.\nPlace reusable helpers in R/functions.R, or organized subdirectories when warranted. Prefer explicit function arguments over dependence on global objects.\nAvoid setwd(), machine-specific absolute paths, and writes outside designated project outputs. Locate restricted USRDS inputs through usRds’s directory configuration.\nNo results in the repository. No script (exploratory or definitive) or comment, commit message, issue, pull-request text or review report contains results, counts or data values from restricted data unless they are cleared for release. Check before every commit and post, since a public repository publishes everything pushed to it, on any branch.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#chunk-labels",
-    "href": "quarto/agents.html#chunk-labels",
-    "title": "",
-    "section": "Chunk labels",
-    "text": "Chunk labels\nScripts are divided into labelled sections so Quarto can reuse code without copying it:\n## ---- cryptococcus-claims\n\nLabel logical steps with descriptive kebab-case identifiers unique across scripts; a duplicate silently picks up the wrong code. A label covers code up to the next label.\nBefore renaming or removing a label, check the .qmd pages that reference it.\nLabels are comments; the underlying R scripts must remain executable through main.R.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#variable-labels",
-    "href": "quarto/agents.html#variable-labels",
-    "title": "",
-    "section": "Variable labels",
-    "text": "Variable labels\n\nLabel analytical variables with human-readable descriptions (for example, labelled::set_variable_labels()).\nFor USRDS fields, prefer usRds::apply_usrds_varlabels() and usRds::apply_usrds_factors() rather than duplicating source labels.\nLabel derived variables where created, including units and time windows where relevant.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#quarto-website",
-    "href": "quarto/agents.html#quarto-website",
-    "title": "",
-    "section": "Quarto website",
-    "text": "Quarto website\nThe site documents the code. It does not run the analysis. Exploratory scripts need no page.\n\n_quarto.yml, index.qmd, 404.qmd (the page GitHub Pages shows for a missing address) and styles.css sit at the root; quarto/ has one page per definitive script, named after it (for example, quarto/create_cohort.qmd for R/create_cohort.R), plus the Background, Study design and methods, About and project-document pages. The custom-callout extension in _extensions/ provides the Rcode, Results and Pending callouts.\nVisual cues. Each kind of page has one sidebar icon, coloured by styles.css, and pages mark the same kind of content with the callout of that colour: background book (blue); study design and methods diagram-3 (orange); R code laptop (pink, Rcode 💻); results clipboard-data (green, Results 📊); project documents file-earmark-ruled (grey). Give every new page the icon of its kind.\nProvisional content. quarto/_pending.lua highlights in yellow every paragraph that starts with Decision pending: or, in the plan, Open:, and any [text]{.pending}, and adds a ⏳ Pending callout to pages that have a mark. Mark only what an open decision could change, link the decision issue, and remove the mark when the decision is settled.\nProject documents. analysis-plan.md, ARCHITECTURE.md, AGENTS.md and REPOSITORY-BLUEPRINT.md are shown on the site by pages in quarto/ that only include the root file, which stays the one source: edit the root file, not the page.\nEach script page loads its script with knitr::read_chunk(\"../R/&lt;script&gt;.R\") in a hidden chunk and shows each labelled section with #| eval: false, with prose explaining what the section does and why, without duplicating source code. Pages link to the script on GitHub and to the scripts it depends on.\nNever evaluate analysis code in the site. Pages render without restricted data. Only the read_chunk() imports, the Architecture page’s chunk that reads ARCHITECTURE.md, site helpers that read code or text, and results pages that read cleared outputs run. Review any proposed publication of aggregate results separately for disclosure compliance.\nPublishing. The site renders to docs/, which is not committed: a GitHub Actions workflow (.github/workflows/publish.yml) renders it on every push to master and publishes it to the gh-pages branch, which GitHub Pages serves. On a pull request the workflow only renders, as a check that every page builds.\nWhen you add a definitive script, add its page and sidebar entry in the same pull request. Prose must match the code: if a change alters what a section does, or its chunk labels, update its explanation and navigation in the same pull request.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#outputs",
-    "href": "quarto/agents.html#outputs",
-    "title": "",
-    "section": "Outputs",
-    "text": "Outputs\n\nR/tables.R and R/figures.R may create outputs directly or orchestrate specialized scripts, exporting to tables/ and figures/.\ntables/ and figures/ are gitignored until USRDS review before publication clears them for release, because they come from restricted data: agents may not open them (see Restricted data). Commit cleared, nonrestricted results only when intentional. Disclosure rules apply to all outputs.\nPublished figures need alt text.\nREADME.Rmd is the source of README.md; edit the .Rmd and re-knit.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#restricted-data-applies-to-everyone",
-    "href": "quarto/agents.html#restricted-data-applies-to-everyone",
-    "title": "",
-    "section": "Restricted data (applies to everyone)",
-    "text": "Restricted data (applies to everyone)\nUSRDS and Medicare data are governed by a data use agreement (DUA). Applicable DUA requirements take precedence over convenience or automation. The Access column of “Data sources” says which sources are restricted. For each restricted source:\n\nNever commit data, extracts, person-level data objects, or saved objects or outputs derived from patient-level records. Keep restricted source data outside the repository, and review output paths and .gitignore before adding new output types.\nAI agents never read restricted data. Anything an agent opens, prints, or summarizes is sent to the model provider. Agents do not open data files or patient-level objects, print rows, or display identifiers (including USRDS IDs), person-level dates, or ZIP codes. Agents also do not open outputs from restricted data that are not yet cleared for release (for example tables/ and figures/ while they are ignored). Agents write code, review it, and run it on synthetic data; results on real data are produced by an authorized person in an authorized environment. A request to execute a pipeline does not itself provide authorization. The only exception is what the Data sources table explicitly allows for a source, and only within those words.\nSynthetic data are built in code, labelled as synthetic, and never derived from real records.\nDisclosure. Prevent disclosure of counts 1–10 in tables, figures, flowcharts, or prose, including counts recoverable by subtraction or complementary cells. Follow the applicable DUA’s exact dissemination rules. Check every output before it leaves the approved environment, including scripts, comments, commit messages, issues, pull-request text and review reports (see R scripts).\nCredentials and paid APIs. Never commit keys, tokens, or .Renviron. Ask before paid, bulk, or uncached API calls.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#look-in-usrds-first",
-    "href": "quarto/agents.html#look-in-usrds-first",
-    "title": "",
-    "section": "Look in usRds first",
-    "text": "Look in usRds first\nThe usRds package is the first place to look for USRDS file loading, claims extraction, claim types, diagnosis dates, Medicare coverage, cohort helpers, and costs.\n\nCheck its documentation, known limitations, and open issues before reproducing functionality locally.\nRaise generally reusable defects or enhancements in usRds; prefer fixes there. Temporary project-specific wrappers must identify the upstream issue and be reconsidered when resolved.\nWhen this analysis depends on a pending usRds enhancement or correction, track the study-specific implementation task here and link it to the corresponding usRds issue.\nRecord the usRds version or commit used for any result.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#usrds-data-facts",
-    "href": "quarto/agents.html#usrds-data-facts",
-    "title": "",
-    "section": "USRDS data facts",
-    "text": "USRDS data facts\nSources: the Researcher’s Guide, Appendix B, and Appendix C for the specific USRDS release being analyzed. The summary below is a starting point, not a replacement for release-appropriate documentation. Obtain the applicable public documents from the NIDDK Researcher’s Guide page. Consult usRds for machine-readable variable labels and formats.\nInstitutional (IN) claims include inpatient, outpatient, skilled nursing facility, home health, and hospice services.\n\nHCFASAF historically distinguishes I inpatient, O outpatient, N SNF, H home health, and S hospice; older data can include M for REBUS inpatient stays.\nSince 2002, corresponding file families include ip_*, op_*, sn_*, hh_*, and hs_*, generally with CLM, DXP, and DET records. Confirm structure for the release.\nInstitutional claim identifiers include USRDS_ID, CLM_FROM, and SEQ_KEYC; verify the applicable key in source documentation.\n\nPhysician/supplier (PS) claims have CLM, LINE, and DX sources.\n\nClaim lines are not necessarily distinct encounters. Define and validate episode grouping before counting services; distinguish diagnoses, procedures, and claim-level versus line-level records.\nPhysician/supplier services are not synonymous with outpatient care.\n\nClaims year: claims can be assigned by service end date rather than start date; verify against release documentation and account for claims crossing year boundaries.\n2025-release data currency (illustrative only; re-verify for the release used): claims complete through 2023-12-31 except the Q1 2024 inpatient file; core files including death dates extend through 2024-12-31. Do not infer contemporaneous coverage of claims and vital status.\nPayer history (payhist): payer categories and Medicare FFS observability must be verified against the release-specific guide. The primary versus sensitivity coverage definitions are prescribed in analysis-plan.md, not here. Pay attention to Medicare Advantage, Medicare secondary payer categories, uncovered days, and Medicare entitlement transitions after transplantation.\nICD transition: ICD-9-CM applies before 2015-10-01; ICD-10-CM and ICD-10-PCS on or after that date. Codes may omit decimals. Establish the date controlling the code system for claims spanning the transition, and verify against official code-set definitions.\nUnclear variables: consult the relevant Appendix B/C and source code documentation rather than inferring meaning from variable names.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#coding-conventions",
-    "href": "quarto/agents.html#coding-conventions",
-    "title": "",
-    "section": "Coding conventions",
-    "text": "Coding conventions\n\nBuild descriptive flowchart text from centrally defined parameters so labels cannot become stale when an analysis window changes.\nCode lists: maintain code type, coding system, category, and exact/prefix matching; verify against official coding sources. Distinguish outcome from opportunity codes and personal-history from symptom codes. Do not invent clinical definitions or variables. Check category overlaps and clinically justified exceptions rather than assuming all codes are mutually exclusive.\nCohort flow: every patient-level inclusion or exclusion goes through fc_filter() in the flowchart workflow. Do not drop rows from $data outside the flowchart; the diagram must reproduce the cohort exactly.\nJoins: specify join keys and expected relationships. Check row multiplication, particularly after interval joins, and define handling of missing or unmatched records explicitly.\nDates and windows: implement the boundaries prespecified in the analysis plan; test boundary cases on synthetic data.\nCode that turns model output into reported numbers lives in named functions in R/functions.R, tested on synthetic data with a known answer.\nPackage APIs: read the help page and NEWS for the installed version before calling a package; don’t write calls from memory.\nStyle: use readable tidyverse conventions. Related readability improvements may accompany functional changes; keep unrelated large-scale formatting separate.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#checks-for-any-change",
-    "href": "quarto/agents.html#checks-for-any-change",
-    "title": "",
-    "section": "Checks for any change",
-    "text": "Checks for any change\nBefore presenting changes for review or seeking commit approval, perform the applicable checks below. Report which checks were completed, which were not, and any limitations.\nEvery change\n\nPlan: does the change implement the plan as written, and does it leave every open decision open?\nData sources: does it use usRds’s functions, and does their documented behavior match what the plan needs?\nPackage APIs: for new or changed calls to a package, does the pull request name the installed version and the help page or NEWS entry relied on?\nReported numbers: does each estimate match the plan’s estimand, and do tables, figures, and site prose say what the code actually computes?\nDisclosure: search every changed tracked file, and the commit messages and pull-request text, for dates, record IDs, names, absolute paths and numbers that could come from restricted data. Read each hit in context; legitimate ones (plan dates, deciders’ names, synthetic examples) stay.\n\nCohort construction\n\nDo the order, denominator, and labels of flowchart steps reflect the actual conditions?\nAre the cohort counts reproducible from the operations shown?\nIs downstream analysis based on the final flowchart dataset?\n\nClaims and case definitions\n\nWhich claim files, claim types, diagnosis fields, and date fields are used?\nAre exact/prefix matching and ICD-9/ICD-10 date transitions handled appropriately?\nCan history codes, rule-out diagnoses, or outcome codes contaminate opportunities?\n\nWindows and coverage\n\nDoes index ascertainment agree with the analysis plan?\nAre date-window boundaries correct and inclusive where specified?\nDoes eligible Medicare coverage span the entire required observation period, with adjacent spans joined without allowing gaps?\n\nTransplant timing\n\nAre first and repeat transplants distinguished where the analysis requires them?\nAre transplant dates and characteristics drawn from the correct episode according to the analysis plan?\nAre graft failure and repeat transplants treated as prespecified?\n\nResidence and facility\n\nIs residence information valid for the relevant date?\nIs facility information aligned to the appropriate year and transplant center?\nAre historical identifiers and changes in identifiers accounted for?\n\nStructure and documentation\n\nDoes ARCHITECTURE.md describe current scripts and data flow when structural changes warrant an update?\nAre chunk labels unique, and do Quarto pages continue to find the labels they reference?\nDoes every definitive script have a Quarto page and sidebar entry, with matching chunk labels? Were affected pages and navigation updated?\nDoes any site chunk evaluate analysis code, and are derived variables labeled?\n\nExecution\n\nDoes main.R run from a clean session, using suitable relative paths?\nAre machine-specific absolute paths or hard-coded restricted-data directories absent?\nAre package versions and saved intermediates documented and checked for staleness?\n\nValidation on real data (by an authorized person only; share only permitted, disclosure-reviewed aggregate findings)\n\nRow counts before and after interval joins.\nCounts of people with multiple matching coverage or residence spans.\nCase counts by ICD-9 versus ICD-10 era and by claim type.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/agents.html#working-with-agents",
-    "href": "quarto/agents.html#working-with-agents",
-    "title": "",
-    "section": "Working with agents",
-    "text": "Working with agents\n\nAutonomy. The person directing an agent sets its working style (review only, step by step, or hands-off) in their own instructions, and may add stricter rules; those take precedence. Without a style, an agent works step by step. At most, an agent may edit code and documentation, add scripts and tests, run code and render the site on synthetic data, and commit to a branch and open a pull request. Explicit approval is required before committing changes or opening a pull request.\nDecisions. Anyone, including an agent, may add options and evidence to a decision issue. A decider states the choice in the issue. Agents implement decisions; they never choose among options on their own, in the issue, the plan, or the code.\nEvery agent, under any autonomy: never merges a pull request; follows the restricted-data rules; asks before running the full pipeline or making expensive external/API calls (approval for these does not override DUA restrictions); shows a person the exact text before posting or sending anything as them, unless that person’s own instructions waive this; and proposes another way of writing something already agreed before committing it.\nPull requests opened by an agent are focused. Each says which plan section or issue it addresses, what was checked, and whether by running code on synthetic data or by reading only. Synthetic results are never described as clinical results.\nScientific citations: maintain verified references in root-level references.bib; cite methodological sources in analysis-plan.md and technical references with the corresponding implementation documentation. Verify bibliographic metadata, source support for claims, and compatibility with the data release being analyzed.",
-    "crumbs": [
-      "Project documents",
-      "AGENTS.md"
-    ]
-  },
-  {
-    "objectID": "quarto/create_cohort.html",
-    "href": "quarto/create_cohort.html",
-    "title": "1. Create cohort",
-    "section": "",
-    "text": "This script builds the cohort of kidney transplant recipients with a cryptococcosis claim after their first transplant and Medicare primary coverage before it, records each exclusion in a flowchart, and attaches residence and transplant-center information for later scripts.\nEvery inclusion and exclusion goes through fc_filter() from the flowchart package, so the cohort flow diagram drawn on the Figures page reproduces the cohort exactly. The cohort used downstream is patients_fc$data after the last step.",
-    "crumbs": [
-      "Code",
-      "Data processing and analysis",
-      "1. Create cohort"
-    ]
-  },
-  {
-    "objectID": "quarto/create_cohort.html#load-the-patient-file",
-    "href": "quarto/create_cohort.html#load-the-patient-file",
-    "title": "1. Create cohort",
-    "section": "Load the patient file",
-    "text": "Load the patient file\nThe USRDS patients file supplies one row per person with demographics and transplant summary fields, loaded through usRds::load_usrds_file(). Its ZIP code is dropped here because it is the ZIP code when the person entered USRDS; the analysis needs residence at the time of the cryptococcosis claim, which is attached in the last step.\n\n\nClick to show/hide R Code\n#Import core demographics from \"patients\" file\npatients_raw&lt;-usRds::load_usrds_file(\"patients\")%&gt;%\n  select(-ZIPCODE) #This is ZIP code at time of USRDS initiation, but we want at time of crypto dx",
-    "crumbs": [
-      "Code",
-      "Data processing and analysis",
-      "1. Create cohort"
-    ]
-  },
-  {
-    "objectID": "quarto/create_cohort.html#start-the-flowchart",
-    "href": "quarto/create_cohort.html#start-the-flowchart",
-    "title": "1. Create cohort",
-    "section": "Start the flowchart",
-    "text": "Start the flowchart\nThe patient file becomes a flowchart object, and the first step keeps people with at least one recorded transplant (TOTTX &gt; 0).\n\n\nClick to show/hide R Code\n#Initialize a flowchart cohort and remove patients who have never had a transplant\npatients_fc&lt;-patients_raw%&gt;%\n  as_fc(label=\"Initial USRDS cohort\")%&gt;%\n\n  fc_filter(TOTTX&gt;0,\n            label=\"Prior transplant\",\n            label_exc=\"Excluded: No prior transplant\",\n            show_exc=TRUE)",
-    "crumbs": [
-      "Code",
-      "Data processing and analysis",
-      "1. Create cohort"
-    ]
-  },
-  {
-    "objectID": "quarto/create_cohort.html#find-cryptococcosis-claims",
-    "href": "quarto/create_cohort.html#find-cryptococcosis-claims",
-    "title": "1. Create cohort",
-    "section": "Find cryptococcosis claims",
-    "text": "Find cryptococcosis claims\nFor the people still in the cohort, get_IN_ICD() and get_PS_ICD() from usRds search the institutional and physician/supplier claims of the years in claim_years for the codes in cryptococcus_ICD_list (see Setup). The two sets are stacked, and each person’s earliest claim of any type, by claim start date, is kept as first_cryptococcus_date.\nSection 3 of the analysis plan specifies a confirmed case (one inpatient stay, or two noninpatient encounters no more than 30 days apart), an index date within the qualifying episode, a uniform prior-history exclusion, and excludes skilled nursing, home health and hospice claims from ascertainment (section 2). The current code uses the first single claim and does not yet apply those rules.\n\n\nClick to show/hide R Code\n#Create list of USRDS ids for patients who have undergone transplant\ntransplant_id_list&lt;-patients_fc$data%&gt;%\n  pull(USRDS_ID)\n\n#Obtain cryptococcus claims from the IN and PS files\ncryptococcus_claims_df&lt;-bind_rows(get_IN_ICD(icd_codes = cryptococcus_ICD_list,\n                                             years = claim_years,\n                                             usrds_ids = transplant_id_list),\n                                  get_PS_ICD(icd_codes = cryptococcus_ICD_list,\n                                             years = claim_years,\n                                             usrds_ids = transplant_id_list)%&gt;%\n                                    rename(CODE=DIAG))\n\n#Keep the first cryptococcus claim of any type for each patient\ncryptococcus_df&lt;-cryptococcus_claims_df%&gt;%\n  slice_min(CLM_FROM, n = 1, with_ties = FALSE, by = USRDS_ID)%&gt;%\n  select(USRDS_ID, first_cryptococcus_date=CLM_FROM)",
-    "crumbs": [
-      "Code",
-      "Data processing and analysis",
-      "1. Create cohort"
-    ]
-  },
-  {
-    "objectID": "quarto/create_cohort.html#apply-the-claim-and-transplant-timing-steps",
-    "href": "quarto/create_cohort.html#apply-the-claim-and-transplant-timing-steps",
-    "title": "1. Create cohort",
-    "section": "Apply the claim and transplant-timing steps",
-    "text": "Apply the claim and transplant-timing steps\nThe first claim date is joined to the cohort one-to-one by USRDS_ID. Two flowchart steps follow: people with no cryptococcosis claim in the search years are excluded, and so are people whose first claim is not after their first transplant date (TX1DATE). The plan requires a kidney transplant strictly before the index date (section 4).\n\n\nClick to show/hide R Code\n#Join cryptococcus date to fc cohort (one row per patient on both sides)\npatients_fc$data&lt;-patients_fc$data%&gt;%\n  left_join(cryptococcus_df,\n            by = \"USRDS_ID\",\n            relationship = \"one-to-one\")\n\npatients_fc&lt;-patients_fc%&gt;%\n\n  #Filter by whether or not the patient had a claim in the study period\n  fc_filter(!is.na(first_cryptococcus_date),\n            label=\"At least one cryptococcus claim 2006-2021\",\n            label_exc=\"No cryptococcus claim 2006-2021\",\n            show_exc=TRUE)%&gt;%\n\n  #Filter by whether or not the first claim was subsequent to the first kidney transplant date\n  fc_filter(first_cryptococcus_date&gt;TX1DATE,\n            label=\"Cryptococcus subsequent to first transplant\",\n            label_exc=\"Excluded: Cryptococcus prior to first transplant\",\n            show_exc=TRUE)",
-    "crumbs": [
-      "Code",
-      "Data processing and analysis",
-      "1. Create cohort"
-    ]
-  },
-  {
-    "objectID": "quarto/create_cohort.html#apply-the-medicare-coverage-steps",
-    "href": "quarto/create_cohort.html#apply-the-medicare-coverage-steps",
-    "title": "1. Create cohort",
-    "section": "Apply the Medicare coverage steps",
-    "text": "Apply the Medicare coverage steps\nusRds::verify_medicare_primary() adds the Medicare primary coverage spell in force on the first claim date, if any, and medicare_primary_TF, which is true when that spell began at least lookback_days earlier. A check stops the script if the coverage join produced more than one row for anyone. Two flowchart steps then keep people with Medicare primary coverage on the claim date, and people with coverage for the full lookback.\nThe plan’s primary cohort requires uninterrupted Medicare fee-for-service Parts A and B (MPAB) coverage from day −365 through day 0, with broader primary coverage (MPAB or MPO) as a sensitivity analysis (section 4). Which payer categories count as primary here is set by verify_medicare_primary(); see the usRds documentation.\n\n\nClick to show/hide R Code\n#Mark Medicare FFS primary coverage on the date of the first cryptococcus claim, and whether\n#that coverage spell began at least lookback_days earlier (adds medicare_primary_TF)\npatients_fc$data&lt;-patients_fc$data%&gt;%\n  verify_medicare_primary(index_date = \"first_cryptococcus_date\",\n                          lookback_days = lookback_days,\n                          coverage_start_variable = \"coverage_start_date\",\n                          coverage_end_variable = \"coverage_end_date\")\n\n#Confirm the coverage join did not duplicate patients\nif (anyDuplicated(patients_fc$data$USRDS_ID) &gt; 0) {\n  stop(\"Medicare coverage join produced more than one row for some patients.\")\n}\n\npatients_fc&lt;-patients_fc%&gt;%\n\n  #Filter by Medicare primary coverage on day of claim\n  fc_filter(!is.na(coverage_start_date),\n            label=\"Medicare is primary coverage on date of claim\",\n            label_exc=\"Other coverage on date of claim\",\n            show_exc=TRUE)%&gt;%\n\n  #Filter by coverage for lookback_days before the claim\n  fc_filter(medicare_primary_TF,\n            label=\"365+ days of coverage prior to first cryptococcus claim\",\n            label_exc=\"Fewer than 365 days of coverage\",\n            show_exc=TRUE)",
-    "crumbs": [
-      "Code",
-      "Data processing and analysis",
-      "1. Create cohort"
-    ]
-  },
-  {
-    "objectID": "quarto/create_cohort.html#attach-residence-and-transplant-center",
-    "href": "quarto/create_cohort.html#attach-residence-and-transplant-center",
-    "title": "1. Create cohort",
-    "section": "Attach residence and transplant center",
-    "text": "Attach residence and transplant center\nThe residenc file is joined to the cohort by an interval join, keeping the residence spell that contains the first claim date, and a check stops the script if that join duplicated anyone. The tx file is loaded with each transplant’s date, graft failure date, and center, and each transplant gets the date of the person’s next transplant (a far-future date when there is none), ready for choosing the transplant episode that precedes the index date. The facility file supplies each center’s ZIP code by year, matched to each transplant by center and the closest facility year at or after the transplant year.\nThese transplant and facility tables (transplant_df, transplant_joined) are built but not yet joined to the cohort. The plan uses the most recent kidney transplant before index for transplant characteristics and center (section 4).\n\n\nClick to show/hide R Code\n#Load ZIP codes\nZIP_code_df&lt;-load_usrds_file(\"residenc\",\n                             usrds_ids = patients_fc$data$USRDS_ID)%&gt;%\n  select(USRDS_ID, ZIPCODE, BEGRES, ENDRES)\n\n#Join patient cohort to ZIP code at the date of the first cryptococcus claim\npatients_fc$data&lt;-left_join(patients_fc$data,\n                            ZIP_code_df,\n                            join_by(USRDS_ID, between(first_cryptococcus_date, BEGRES, ENDRES)))\n\n#Confirm the residence join did not duplicate patients\nif (anyDuplicated(patients_fc$data$USRDS_ID) &gt; 0) {\n  stop(\"Residence join produced more than one row for some patients.\")\n}\n\n#Load transplant data, and add a date for the next transplant (missing set to 1-1-2100)\ntransplant_df&lt;-load_usrds_file(\"tx\", usrds_ids = patients_fc$data$USRDS_ID)%&gt;%\n  select(USRDS_ID, TDATE, FAILDATE, PROVUSRD, YEAR)%&gt;%\n  arrange(USRDS_ID, TDATE)%&gt;%\n  group_by(USRDS_ID)%&gt;%\n  mutate(TDATE_lead=lead(TDATE))%&gt;%\n  ungroup()%&gt;%\n  mutate(TDATE_lead=coalesce(TDATE_lead, as.Date(\"2100-01-01\")))\n\n#Load facility data\nfacility &lt;- load_usrds_file(\"facility\")%&gt;%\n  select(ZIPCODE, PROVUSRD, FS_YEAR)%&gt;%\n  rename(YEAR=FS_YEAR)%&gt;%\n  mutate(YEAR=as.double(YEAR))\n\n#Interval merge\ntransplant_joined&lt;-left_join(transplant_df, facility, join_by(PROVUSRD, closest(x$YEAR&lt;=y$YEAR )))",
-    "crumbs": [
-      "Code",
-      "Data processing and analysis",
-      "1. Create cohort"
-    ]
-  },
-  {
     "objectID": "quarto/analysis-plan.html",
     "href": "quarto/analysis-plan.html",
     "title": "",
@@ -717,6 +140,583 @@
     "crumbs": [
       "Project documents",
       "Analysis plan"
+    ]
+  },
+  {
+    "objectID": "quarto/repository-blueprint.html",
+    "href": "quarto/repository-blueprint.html",
+    "title": "",
+    "section": "",
+    "text": "Project documentsRepository blueprint Code",
+    "crumbs": [
+      "Project documents",
+      "Repository blueprint"
+    ]
+  },
+  {
+    "objectID": "quarto/repository-blueprint.html#analytical-scripts",
+    "href": "quarto/repository-blueprint.html#analytical-scripts",
+    "title": "",
+    "section": "Analytical scripts",
+    "text": "Analytical scripts\n\nR/main.R sources definitive scripts in dependency order.\nTypical workflow: setup → cohort construction → processing → modeling → outputs.\nStudy-specific scripts may be grouped into subdirectories by analytical stage.\nR/tables.R and R/figures.R may generate outputs directly or orchestrate specialized scripts.",
+    "crumbs": [
+      "Project documents",
+      "Repository blueprint"
+    ]
+  },
+  {
+    "objectID": "quarto/repository-blueprint.html#documentation",
+    "href": "quarto/repository-blueprint.html#documentation",
+    "title": "",
+    "section": "Documentation",
+    "text": "Documentation\n\nDocument definitive analytical scripts with explanatory Quarto pages; exploratory scripts need not have pages.\nUse Cryptococcus-cost-analysis as an example for Quarto supporting files, chunk imports, callouts, and formatting—not scientific methods.\nQuarto source and rendered output locations may vary by project.",
+    "crumbs": [
+      "Project documents",
+      "Repository blueprint"
+    ]
+  },
+  {
+    "objectID": "quarto/repository-blueprint.html#outputs-and-version-control",
+    "href": "quarto/repository-blueprint.html#outputs-and-version-control",
+    "title": "",
+    "section": "Outputs and version control",
+    "text": "Outputs and version control\n\nTrack approved, nonrestricted outputs when useful for publication; otherwise retain them locally and exclude them from Git.\n.gitignore: Exclude restricted data, credentials, caches, temporary files, and generated outputs unless intentionally tracked (e.g., .Rproj.user/, .Rhistory, .RData, .httr-oauth, .quarto/, cache/, figures/, tables/, *.quarto_ipynb); verify exclusions cover actual output paths without hiding necessary source or reference files.",
+    "crumbs": [
+      "Project documents",
+      "Repository blueprint"
+    ]
+  },
+  {
+    "objectID": "quarto/figures.html",
+    "href": "quarto/figures.html",
+    "title": "Figures",
+    "section": "",
+    "text": "This script draws the figures for the manuscript. So far that is the cohort flow diagram.",
+    "crumbs": [
+      "Code",
+      "Tables and figures",
+      "Figures"
+    ]
+  },
+  {
+    "objectID": "quarto/figures.html#cohort-flowchart",
+    "href": "quarto/figures.html#cohort-flowchart",
+    "title": "Figures",
+    "section": "Cohort flowchart",
+    "text": "Cohort flowchart\nfc_draw() draws the STROBE cohort flow diagram from patients_fc, the flowchart object built step by step on the Create cohort page, so every box matches a step in the code. Before the diagram leaves the secure environment, every box is checked for counts from 1 to 10, including excluded counts that could be recovered by subtraction, under the data use agreement’s small-cell rule (see AGENTS.md, “Restricted data”). The diagram is not yet exported to figures/.\n\n\nClick to show/hide R Code\n#Draw the cohort flowchart\n#Before exporting, check that no box shows a count from 1 to 10 (CMS cell-size rule),\n#including excluded counts recoverable by subtraction\npatients_fc%&gt;%\n  fc_draw()",
+    "crumbs": [
+      "Code",
+      "Tables and figures",
+      "Figures"
+    ]
+  },
+  {
+    "objectID": "quarto/architecture.html",
+    "href": "quarto/architecture.html",
+    "title": "",
+    "section": "",
+    "text": "Project documentsArchitecture Code",
+    "crumbs": [
+      "Project documents",
+      "Architecture"
+    ]
+  },
+  {
+    "objectID": "quarto/architecture.html#overview",
+    "href": "quarto/architecture.html#overview",
+    "title": "",
+    "section": "Overview",
+    "text": "Overview\nThe analysis is a set of R scripts that run in sequence in one R session. R/main.R is the only entry point. It sources:\n\na setup script (libraries, constants, code lists)\na cohort-construction script\na figures script\n\nAll USRDS file access goes through the {usRds} package. Cohort inclusions and exclusions are recorded with the {flowchart} package, so the participant flowchart is produced directly from the cohort-building code.\nEvery object lives in the global environment of the session. The pipeline writes nothing to disk: no intermediate files, and no exported tables or figures. Restricted data are read from the USRDS data directory configured for {usRds} and stay in memory.\nCurrent scope. The code builds a cohort of kidney transplant recipients with a cryptococcosis claim and draws its flowchart. Not yet implemented:\n\nthe missed-opportunity algorithm\ncomorbidities\nmortality and geographic analyses\nany Quarto documents",
+    "crumbs": [
+      "Project documents",
+      "Architecture"
+    ]
+  },
+  {
+    "objectID": "quarto/architecture.html#architecture-diagram",
+    "href": "quarto/architecture.html#architecture-diagram",
+    "title": "",
+    "section": "Architecture diagram",
+    "text": "Architecture diagram\n\n\n\n\n\nflowchart TD\n    M[R/main.R&lt;br/&gt;entry point] --&gt; S[R/setup.R]\n    M --&gt; C[R/create_cohort.R]\n    M --&gt; F[R/figures.R]\n\n    S -- \"constants, code lists\" --&gt; C\n    C -- \"patients_fc\" --&gt; F\n\n    U[[usRds package]] --&gt; C\n    D[(USRDS data directory&lt;br/&gt;restricted, outside repo)] --&gt; U\n\n    F --&gt; O[Flowchart drawn in session&lt;br/&gt;not saved]",
+    "crumbs": [
+      "Project documents",
+      "Architecture"
+    ]
+  },
+  {
+    "objectID": "quarto/architecture.html#data-flow",
+    "href": "quarto/architecture.html#data-flow",
+    "title": "",
+    "section": "Data flow",
+    "text": "Data flow\n\n\n\n\n\nflowchart LR\n    P[(patients)] --&gt; R1[patients_raw]\n    R1 --&gt;|\"as_fc + fc_filter:&lt;br/&gt;any transplant\"| FC1[patients_fc]\n    FC1 --&gt;|\"IDs\"| IDS[transplant_id_list]\n    IDS --&gt; CL[(IN and PS claims)]\n    CL --&gt;|\"get_IN_ICD + get_PS_ICD\"| CC[cryptococcus_claims_df]\n    CC --&gt;|\"earliest claim per patient\"| CD[cryptococcus_df]\n    CD --&gt;|\"join to $data\"| FC2[patients_fc]\n    FC2 --&gt;|\"fc_filter: has claim;&lt;br/&gt;after first transplant\"| FC3[patients_fc]\n    PH[(payhist)] --&gt;|\"verify_medicare_primary\"| FC4\n    FC3 --&gt; FC4[patients_fc&lt;br/&gt;+ coverage columns]\n    FC4 --&gt;|\"fc_filter: Medicare primary on date;&lt;br/&gt;coverage ≥ lookback\"| FC5[patients_fc]\n    RES[(residenc)] --&gt;|\"interval join on index date\"| FC6[patients_fc&lt;br/&gt;+ ZIP code]\n    FC5 --&gt; FC6\n    TX[(tx)] --&gt; TD[transplant_df]\n    FAC[(facility)] --&gt; FA[facility]\n    TD --&gt; TJ[transplant_joined]\n    FA --&gt; TJ\n    FC6 --&gt; FIG[fc_draw in figures.R]\n\n\n\n\n\n\ntransplant_df, facility, and transplant_joined are built, but they are not yet joined to the cohort. They are dead ends in the current flow.\nHow the cohort moves through create_cohort.R:\n\nBase population. Load the USRDS patient file, dropping the ZIP code recorded when the patient entered USRDS. Wrap it in a flowchart object, then keep patients with at least one transplant.\nCase finding. Collect the IDs of the patients still in the cohort. Pull institutional and physician/supplier claims that carry a code from the cryptococcosis list, for the claim years in the constants. Combine the two sources, then keep each patient’s earliest claim date as first_cryptococcus_date.\nAttach and filter. Join that date to the flowchart’s data with a one-to-one join. Then apply two flowchart filters: the patient has a claim, and the claim falls after the first transplant date.\nMedicare coverage. verify_medicare_primary() adds the start and end dates of the Medicare primary coverage span that contains the index date, plus a TRUE/FALSE flag for whether that span covers the look-back period. A duplicate check stops the run if the join multiplied rows. Two flowchart filters then apply the coverage criteria.\nResidence. An interval join adds the ZIP code valid on the index date, followed by a duplicate check. Patients with no matching residence period are kept, with a missing ZIP code.\nTransplant and facility (not connected). Builds a per-transplant table with the date of the next transplant (a far-future placeholder when there is none), and joins each transplant to facility records by provider and year.\n\nfigures.R then draws the flowchart from the final patients_fc.",
+    "crumbs": [
+      "Project documents",
+      "Architecture"
+    ]
+  },
+  {
+    "objectID": "quarto/architecture.html#components",
+    "href": "quarto/architecture.html#components",
+    "title": "",
+    "section": "Components",
+    "text": "Components\n\nEntry point\nPurpose: runs the full pipeline in dependency order.\nLocation: R/main.R\nInteractions: sources R/setup.R, R/create_cohort.R, and R/figures.R, in that order, from the project root.\n\n\nSetup\nPurpose: loads every library, and defines the constants and code lists that the other scripts use.\nLocation: R/setup.R\nLabelled sections: libraries, constants, icd-code-lists, missed-diagnosis-code-maps\nKey objects:\n\nclaim_years: the claim years searched\nlookback_days: the days of Medicare primary coverage required before the index date\nicd10_start_date: the date ICD-10 coding begins (defined but not used yet)\ncryptococcus_ICD_list: the ICD-9 and ICD-10 case-finding codes, matched exactly\nicd9_map, icd10_map, and icd_combined_map: symptom, condition, and procedure codes for possible earlier presentations, by category and code type (not used yet)\n\nInteractions: provides constants and code lists to create_cohort.R. Nothing upstream.\n\n\nCohort construction\nPurpose: builds the analytic cohort and records each inclusion step in the flowchart.\nLocation: R/create_cohort.R\nLabelled sections: load-usrds-files, initialize-flowchart, cryptococcus-claims, develop-flowchart, medicare-coverage, residence-transplant-facility\nKey objects:\n\npatients_fc: the flowchart object. Its $data element is the cohort, one row per patient.\ncryptococcus_claims_df: every cryptococcosis claim for transplant recipients, from both claim sources\ncryptococcus_df: the earliest cryptococcosis claim date per patient\nZIP_code_df: residence periods\ntransplant_df, facility, and transplant_joined: transplant and facility tables, not yet used downstream\n\nExternal functions:\n\n{usRds}: load_usrds_file(), get_IN_ICD(), get_PS_ICD(), verify_medicare_primary()\nflowchart: as_fc(), fc_filter()\n\nInteractions: takes constants and code lists from setup, and reads the USRDS files through {usRds}. Passes patients_fc to figures.\n\n\nFigures\nPurpose: draws the participant flowchart.\nLocation: R/figures.R\nLabelled sections: final-flowchart\nExternal functions: flowchart’s fc_draw()\nInteractions: takes patients_fc from cohort construction. The diagram is drawn in the session and not exported.",
+    "crumbs": [
+      "Project documents",
+      "Architecture"
+    ]
+  },
+  {
+    "objectID": "quarto/architecture.html#external-dependencies",
+    "href": "quarto/architecture.html#external-dependencies",
+    "title": "",
+    "section": "External dependencies",
+    "text": "External dependencies\n\n\n\nDependency\nRole\n\n\n\n\n{usRds}\nLocates and reads USRDS files; extracts claims by ICD code; checks Medicare primary coverage. All data access goes through it.\n\n\nflowchart\nRecords cohort filtering steps and draws the participant flowchart\n\n\n{tidyverse}, {lubridate}\nData manipulation and dates\n\n\nUSRDS data directory\nThe restricted source files, outside the repository. Its location is set through {usRds} outside this code; no script sets it.",
+    "crumbs": [
+      "Project documents",
+      "Architecture"
+    ]
+  },
+  {
+    "objectID": "quarto/architecture.html#configuration",
+    "href": "quarto/architecture.html#configuration",
+    "title": "",
+    "section": "Configuration",
+    "text": "Configuration\n\nAnalysis constants: in R/setup.R (see Setup above). Flowchart labels in create_cohort.R still hard-code the claim years and the 365-day look-back, so they do not follow the constants.\nData location: set through {usRds}’s own configuration, not in this repository.\nIgnored files: .gitignore covers RStudio and session files (.Rproj.user, .Rhistory, .Rdata), .DS_Store, .httr-oauth, and .quarto.",
+    "crumbs": [
+      "Project documents",
+      "Architecture"
+    ]
+  },
+  {
+    "objectID": "quarto/architecture.html#chunk-labels",
+    "href": "quarto/architecture.html#chunk-labels",
+    "title": "",
+    "section": "Chunk labels",
+    "text": "Chunk labels\nEach script is divided into sections marked ## ---- label, so that Quarto documents can load them with knitr::read_chunk(). The labels in each script are listed under Components above. No Quarto documents exist yet. README.Rmd is the unedited {usethis} template, and it renders README.md together with an example figure in README_files/.",
+    "crumbs": [
+      "Project documents",
+      "Architecture"
+    ]
+  },
+  {
+    "objectID": "quarto/architecture.html#code-references",
+    "href": "quarto/architecture.html#code-references",
+    "title": "",
+    "section": "Code references",
+    "text": "Code references\n\n\n\n\n\n\n\n\nComponent\nFile\nKey symbols\n\n\n\n\nEntry point\nR/main.R\nsource() calls\n\n\nConstants\nR/setup.R\nclaim_years, lookback_days, icd10_start_date\n\n\nCode lists\nR/setup.R\ncryptococcus_ICD_list, icd9_map, icd10_map, icd_combined_map\n\n\nCohort and flowchart\nR/create_cohort.R\npatients_raw, patients_fc, fc_filter()\n\n\nCase finding\nR/create_cohort.R\nget_IN_ICD(), get_PS_ICD(), cryptococcus_claims_df, cryptococcus_df\n\n\nCoverage\nR/create_cohort.R\nverify_medicare_primary(), medicare_primary_TF, coverage_start_date, coverage_end_date\n\n\nResidence\nR/create_cohort.R\nZIP_code_df\n\n\nTransplant and facility\nR/create_cohort.R\ntransplant_df, facility, transplant_joined\n\n\nFlowchart figure\nR/figures.R\nfc_draw()",
+    "crumbs": [
+      "Project documents",
+      "Architecture"
+    ]
+  },
+  {
+    "objectID": "quarto/architecture.html#glossary",
+    "href": "quarto/architecture.html#glossary",
+    "title": "",
+    "section": "Glossary",
+    "text": "Glossary\n\n\n\n\n\n\n\nTerm\nMeaning in this repository\n\n\n\n\nIN claims\nUSRDS institutional claims: inpatient, outpatient, SNF, home health, and hospice. Not inpatient only.\n\n\nPS claims\nUSRDS physician/supplier claims\n\n\nHCFASAF\nThe claim-type variable on claims returned by {usRds}\n\n\nIndex date\nCurrently first_cryptococcus_date, the earliest cryptococcosis claim of any type. analysis-plan.md defines the intended index date.\n\n\npatients_fc\nThe flowchart object. patients_fc$data is the cohort, and its filter history becomes the flowchart.\n\n\nLook-back\nThe days of continuous Medicare primary coverage required before the index date (lookback_days)",
+    "crumbs": [
+      "Project documents",
+      "Architecture"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Overview",
+    "section": "",
+    "text": "This analysis looks for potential missed opportunities to diagnose cryptococcosis among kidney transplant recipients in the United States. It uses the United States Renal Data System (USRDS) and its linked Medicare fee-for-service claims to find health care encounters, in the 90 days before a recipient’s first observed qualifying cryptococcosis diagnosis, that carried a relevant diagnosis or diagnostic procedure. These are claims-based potential missed opportunities, not confirmed diagnostic errors.\nBraces identify R packages throughout this site.",
+    "crumbs": [
+      "Home"
+    ]
+  },
+  {
+    "objectID": "index.html#what-this-analysis-does",
+    "href": "index.html#what-this-analysis-does",
+    "title": "Overview",
+    "section": "",
+    "text": "This analysis looks for potential missed opportunities to diagnose cryptococcosis among kidney transplant recipients in the United States. It uses the United States Renal Data System (USRDS) and its linked Medicare fee-for-service claims to find health care encounters, in the 90 days before a recipient’s first observed qualifying cryptococcosis diagnosis, that carried a relevant diagnosis or diagnostic procedure. These are claims-based potential missed opportunities, not confirmed diagnostic errors.\nBraces identify R packages throughout this site.",
+    "crumbs": [
+      "Home"
+    ]
+  },
+  {
+    "objectID": "index.html#methods",
+    "href": "index.html#methods",
+    "title": "Overview",
+    "section": "Methods",
+    "text": "Methods\nThe primary estimand is the proportion of eligible recipients with at least one qualifying encounter in days −90 through −1, reported separately for diagnosis-based, procedure-based, and combined opportunities, with Wilson 95% confidence intervals1. Secondary analyses examine associations with mortality, rurality, and distance to the transplant center. Reporting follows STROBE and RECORD2,3. The analysis plan is the authoritative specification.",
+    "crumbs": [
+      "Home"
+    ]
+  },
+  {
+    "objectID": "index.html#status",
+    "href": "index.html#status",
+    "title": "Overview",
+    "section": "Status",
+    "text": "Status\nThis analysis is preliminary. The analysis plan is a proposal that has not yet been adopted, and the code currently builds the initial cohort only. Open decisions and known gaps are tracked in GitHub Issues.",
+    "crumbs": [
+      "Home"
+    ]
+  },
+  {
+    "objectID": "quarto/setup.html",
+    "href": "quarto/setup.html",
+    "title": "Setup",
+    "section": "",
+    "text": "This script attaches the packages and defines the constants and code lists that every other script uses. R/main.R sources it first.",
+    "crumbs": [
+      "Code",
+      "Setup and helper functions",
+      "Setup"
+    ]
+  },
+  {
+    "objectID": "quarto/setup.html#libraries",
+    "href": "quarto/setup.html#libraries",
+    "title": "Setup",
+    "section": "Libraries",
+    "text": "Libraries\nThe analysis uses the {tidyverse} and {lubridate} for data management and dates, {usRds} to load USRDS files and extract Medicare claims, and {flowchart} to build the cohort so that the STROBE flow diagram and the analytic cohort come from the same code. These are the only library() calls in the project; other scripts rely on them.\n\n\nClick to show/hide R Code\n#Data management libraries\nlibrary(tidyverse)\nlibrary(lubridate)\n\n#Core library for the USRDS\nlibrary(usRds)\n\n#Flowchart library\nlibrary(flowchart)",
+    "crumbs": [
+      "Code",
+      "Setup and helper functions",
+      "Setup"
+    ]
+  },
+  {
+    "objectID": "quarto/setup.html#constants",
+    "href": "quarto/setup.html#constants",
+    "title": "Setup",
+    "section": "Constants",
+    "text": "Constants\nNumbers a reader might want to change live here as named constants, so downstream scripts and flowchart labels use one definition:\n\nclaim_years: the calendar years of institutional (IN) and physician/supplier (PS) claims searched for cryptococcosis.\nlookback_days: the days of Medicare primary coverage required before the first cryptococcosis claim.\nicd10_start_date: the ICD-9-CM to ICD-10 transition date. It is defined but not yet used by any script.\n\nThe plan sets index-date eligibility from the date range in which claims are complete for the release analyzed (analysis plan, section 2); claim_years is the current code’s fixed range.\n\n\nClick to show/hide R Code\nclaim_years &lt;- 2006:2021                   #Years of IN and PS claims searched\nlookback_days &lt;- 365                       #Days of Medicare primary coverage required before the first cryptococcus claim\nicd10_start_date &lt;- as.Date(\"2015-10-01\")  #ICD-9-CM before this date, ICD-10-CM/PCS on or after",
+    "crumbs": [
+      "Code",
+      "Setup and helper functions",
+      "Setup"
+    ]
+  },
+  {
+    "objectID": "quarto/setup.html#cryptococcosis-codes",
+    "href": "quarto/setup.html#cryptococcosis-codes",
+    "title": "Setup",
+    "section": "Cryptococcosis codes",
+    "text": "Cryptococcosis codes\ncryptococcus_ICD_list holds the ICD-9-CM and ICD-10-CM diagnosis codes for cryptococcosis, stored without periods. The {usRds} claim functions match them exactly. Section 3 of the analysis plan calls for a clinically reviewed list.\n\n\nClick to show/hide R Code\n#ICD-9 and ICD-10 codes for cryptococcus (matched exactly by get_IN_ICD and get_PS_ICD)\ncryptococcus_ICD_list &lt;- c(\"1175\", \"3210\", \"B450\", \"B451\", \"B452\", \"B453\", \"B457\", \"B458\", \"B459\")",
+    "crumbs": [
+      "Code",
+      "Setup and helper functions",
+      "Setup"
+    ]
+  },
+  {
+    "objectID": "quarto/setup.html#missed-opportunity-code-maps",
+    "href": "quarto/setup.html#missed-opportunity-code-maps",
+    "title": "Setup",
+    "section": "Missed-opportunity code maps",
+    "text": "Missed-opportunity code maps\nicd9_map and icd10_map list the diagnosis and procedure codes for the categories that could signal an earlier presentation of cryptococcosis: lumbar puncture, increased intracranial pressure, brain infection, encephalopathy, headache, focal neurological deficit, stroke, pneumonia, pleural and mediastinal disease, signs of infection, and infection not otherwise specified. Each row records the category, whether the code is a diagnosis or a procedure, and the code. icd_combined_map stacks the two. No script uses the maps yet; they are the starting point for the opportunity ascertainment in sections 5 and 6 of the plan, which requires clinically reviewed, era-appropriate exact or prefix rules.\n\n\nClick to show/hide R Code\n#ICD-9 and ICD-10 code maps for possible earlier presentations of cryptococcus\nicd9_map &lt;- tribble(\n  ~category, ~code_type,   ~icd_code,\n  \n  # Lumbar puncture\n  \"Lumbar Puncture\", \"procedure\", \"0331\",\n  \n  # Increased intracranial pressure\n  \"Increased Intracranial Pressure\", \"diagnosis\", \"3313\",\n  \"Increased Intracranial Pressure\", \"diagnosis\", \"3314\",\n  \"Increased Intracranial Pressure\", \"diagnosis\", \"3315\",\n  \"Increased Intracranial Pressure\", \"procedure\", \"8891\",\n  \n  # Brain infection\n  \"Brain Infection\", \"diagnosis\", \"0479\",\n  \"Brain Infection\", \"diagnosis\", \"3207\",\n  \"Brain Infection\", \"diagnosis\", \"3209\",\n  \"Brain Infection\", \"diagnosis\", \"3214\",\n  \"Brain Infection\", \"diagnosis\", \"3222\",\n  \"Brain Infection\", \"diagnosis\", \"3229\",\n  \"Brain Infection\", \"diagnosis\", \"32382\",\n  \"Brain Infection\", \"diagnosis\", \"326\",\n  \"Brain Infection\", \"diagnosis\", \"V1242\",\n  \"Brain Infection\", \"procedure\", \"8893\",\n  \n  # Encephalopathy\n  \"Encephalopathy\", \"diagnosis\", \"07020\",\n  \"Encephalopathy\", \"diagnosis\", \"07021\",\n  \"Encephalopathy\", \"diagnosis\", \"07022\",\n  \"Encephalopathy\", \"diagnosis\", \"07044\",\n  \"Encephalopathy\", \"diagnosis\", \"07071\",\n  \"Encephalopathy\", \"diagnosis\", \"2903\",\n  \"Encephalopathy\", \"diagnosis\", \"2931\",\n  \"Encephalopathy\", \"diagnosis\", \"2989\",\n  \"Encephalopathy\", \"diagnosis\", \"3238\",\n  \"Encephalopathy\", \"diagnosis\", \"32381\",\n  \"Encephalopathy\", \"diagnosis\", \"334830\",\n  \"Encephalopathy\", \"diagnosis\", \"34831\",\n  \"Encephalopathy\", \"diagnosis\", \"34839\",\n  \"Encephalopathy\", \"diagnosis\", \"34982\",\n  \"Encephalopathy\", \"diagnosis\", \"5722\",\n  \"Encephalopathy\", \"diagnosis\", \"78001\",\n  \"Encephalopathy\", \"diagnosis\", \"78009\",\n  \"Encephalopathy\", \"diagnosis\", \"7801\",\n  \"Encephalopathy\", \"diagnosis\", \"78097\",\n  \"Encephalopathy\", \"procedure\", \"0222\",\n  \"Encephalopathy\", \"procedure\", \"0232\",\n  \"Encephalopathy\", \"procedure\", \"0234\",\n  \"Encephalopathy\", \"procedure\", \"0242\",\n  \"Encephalopathy\", \"procedure\", \"0243\",\n  \n  # Headache\n  \"Headache\", \"diagnosis\", \"30781\",\n  \"Headache\", \"diagnosis\", \"3393\",\n  \"Headache\", \"diagnosis\", \"34610\",\n  \"Headache\", \"diagnosis\", \"34670\",\n  \"Headache\", \"diagnosis\", \"34690\",\n  \"Headache\", \"diagnosis\", \"34691\",\n  \"Headache\", \"diagnosis\", \"7840\",\n  \"Headache\", \"procedure\", \"0112\",\n  \"Headache\", \"procedure\", \"0390\",\n  \n  # Focal neurological deficit\n  \"Focal Neurological Deficit\", \"diagnosis\", \"3688\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"38912\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"3899\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"43884\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7802\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"78039\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7804\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7810\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7812\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7813\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7843\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"7845\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0110\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0113\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0114\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0128\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0131\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0139\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0159\",\n  \"Focal Neurological Deficit\", \"procedure\", \"022\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0309\",\n  \"Focal Neurological Deficit\", \"procedure\", \"0392\",\n  \n  # Stroke\n  \"Stroke\", \"diagnosis\", \"4358\",\n  \"Stroke\", \"diagnosis\", \"4359\",\n  \"Stroke\", \"diagnosis\", \"V1254\",\n  \"Stroke\", \"procedure\", \"0151\",\n  \n  # Other neurological\n  \"Other\", \"diagnosis\", \"3485\",\n  \"Other\", \"diagnosis\", \"34889\",\n  \"Other\", \"diagnosis\", \"3489\",\n  \"Other\", \"diagnosis\", \"3481\",\n  \n  # Pneumonia NOS\n  \"Pneumonia NOS\", \"diagnosis\", \"4838\",\n  \"Pneumonia NOS\", \"diagnosis\", \"4847\",\n  \"Pneumonia NOS\", \"diagnosis\", \"485\",\n  \"Pneumonia NOS\", \"diagnosis\", \"486\",\n  \"Pneumonia NOS\", \"diagnosis\", \"490\",\n  \"Pneumonia NOS\", \"diagnosis\", \"49322\",\n  \"Pneumonia NOS\", \"diagnosis\", \"4940\",\n  \"Pneumonia NOS\", \"diagnosis\", \"496\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51636\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5168\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51681\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51682\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51689\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5169\",\n  \"Pneumonia NOS\", \"diagnosis\", \"517\",\n  \"Pneumonia NOS\", \"diagnosis\", \"518\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5180\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5181\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5182\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5183\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5184\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5185\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5186\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5187\",\n  \"Pneumonia NOS\", \"diagnosis\", \"5188\",\n  \n  \"Pneumonia NOS\", \"diagnosis\", \"51881\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51882\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51883\",\n  \"Pneumonia NOS\", \"diagnosis\", \"51884\",\n  \n  \"Pneumonia NOS\", \"diagnosis\", \"71481\",\n  \"Pneumonia NOS\", \"diagnosis\", \"78605\",\n  \"Pneumonia NOS\", \"diagnosis\", \"78609\",\n  \"Pneumonia NOS\", \"diagnosis\", \"7862\",\n  \"Pneumonia NOS\", \"diagnosis\", \"7931\",\n  \"Pneumonia NOS\", \"diagnosis\", \"79311\",\n  \"Pneumonia NOS\", \"diagnosis\", \"V1261\",\n  \"Pneumonia NOS\", \"procedure\", \"3220\",\n  \"Pneumonia NOS\", \"procedure\", \"3229\",\n  \"Pneumonia NOS\", \"procedure\", \"3230\",\n  \"Pneumonia NOS\", \"procedure\", \"3249\",\n  \"Pneumonia NOS\", \"procedure\", \"3321\",\n  \"Pneumonia NOS\", \"procedure\", \"3322\",\n  \"Pneumonia NOS\", \"procedure\", \"3323\",\n  \"Pneumonia NOS\", \"procedure\", \"3324\",\n  \"Pneumonia NOS\", \"procedure\", \"3326\",\n  \"Pneumonia NOS\", \"procedure\", \"3327\",\n  \"Pneumonia NOS\", \"procedure\", \"3328\",\n  \n  # Pleural disease\n  \"Pleural Disease\", \"diagnosis\", \"5119\",\n  \"Pleural Disease\", \"procedure\", \"3404\",\n  \"Pleural Disease\", \"procedure\", \"3406\",\n  \"Pleural Disease\", \"procedure\", \"3491\",\n  \"Pleural Disease\", \"procedure\", \"8873\",\n  \n  # Mediastinal\n  \"Mediastinal Diagnosis\", \"procedure\", \"3422\",\n  \n  # Other pulmonary\n  \"Other\", \"diagnosis\", \"51889\",\n  \"Other\", \"diagnosis\", \"78652\",\n  \n  # Signs and symptoms of infection\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"7806\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"78060\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"78061\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"78079\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"7850\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"7856\",\n  \n  # Infection NOS\n  \"Infection NOS\", \"diagnosis\", \"07999\",\n  \"Infection NOS\", \"diagnosis\", \"1179\",\n  \"Infection NOS\", \"diagnosis\", \"56723\",\n  \"Infection NOS\", \"diagnosis\", \"78552\",\n  \"Infection NOS\", \"diagnosis\", \"725\",\n  \"Infection NOS\", \"diagnosis\", \"99590\",\n  \"Infection NOS\", \"diagnosis\", \"99591\",\n  \"Infection NOS\", \"diagnosis\", \"99592\"\n  \n)\n\nicd10_map &lt;- tribble(\n  ~category, ~code_type,   ~icd_code,\n  \n  # ------------------------------------------------------------------\n  # Lumbar puncture (ICD-10-PCS)\n  # ------------------------------------------------------------------\n  \"Lumbar Puncture\", \"procedure\", \"009U3ZX\",  # Drainage of lumbar spinal canal, diagnostic\n  \n  # ------------------------------------------------------------------\n  # Increased intracranial pressure\n  # ------------------------------------------------------------------\n  \"Increased Intracranial Pressure\", \"diagnosis\", \"G933\",\n  \"Increased Intracranial Pressure\", \"diagnosis\", \"G934\",\n  \"Increased Intracranial Pressure\", \"diagnosis\", \"G935\",\n  \n  # ------------------------------------------------------------------\n  # Brain infection / meningitis / encephalitis\n  # ------------------------------------------------------------------\n  \"Brain Infection\", \"diagnosis\", \"G00\",\n  \"Brain Infection\", \"diagnosis\", \"G01\",\n  \"Brain Infection\", \"diagnosis\", \"G02\",\n  \"Brain Infection\", \"diagnosis\", \"G03\",\n  \"Brain Infection\", \"diagnosis\", \"G04\",\n  \"Brain Infection\", \"diagnosis\", \"A870\",     # Viral meningitis\n  \"Brain Infection\", \"diagnosis\", \"B451\",     # Cryptococcal meningitis\n  \"Brain Infection\", \"diagnosis\", \"Z8619\",    # Personal history of CNS infection\n  \n  # ------------------------------------------------------------------\n  # Encephalopathy\n  # ------------------------------------------------------------------\n  \"Encephalopathy\", \"diagnosis\", \"G931\",\n  \"Encephalopathy\", \"diagnosis\", \"G932\",\n  \"Encephalopathy\", \"diagnosis\", \"G9340\",\n  \"Encephalopathy\", \"diagnosis\", \"G9341\",\n  \"Encephalopathy\", \"diagnosis\", \"G9349\",\n  \"Encephalopathy\", \"diagnosis\", \"G9389\",\n  \"Encephalopathy\", \"diagnosis\", \"K7200\",\n  \"Encephalopathy\", \"diagnosis\", \"R410\",\n  \"Encephalopathy\", \"diagnosis\", \"R411\",\n  \"Encephalopathy\", \"diagnosis\", \"R412\",\n  \n  # ------------------------------------------------------------------\n  # Headache\n  # ------------------------------------------------------------------\n  \"Headache\", \"diagnosis\", \"R51\",\n  \"Headache\", \"diagnosis\", \"G439\",\n  \"Headache\", \"diagnosis\", \"G43809\",\n  \"Headache\", \"diagnosis\", \"G43819\",\n  \n  # ------------------------------------------------------------------\n  # Focal neurological deficit\n  # ------------------------------------------------------------------\n  \"Focal Neurological Deficit\", \"diagnosis\", \"R29810\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"R29818\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"R202\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"R252\",\n  \"Focal Neurological Deficit\", \"diagnosis\", \"R4701\",\n  \n  # ------------------------------------------------------------------\n  # Stroke / TIA\n  # ------------------------------------------------------------------\n  \"Stroke\", \"diagnosis\", \"I63\",\n  \"Stroke\", \"diagnosis\", \"I64\",\n  \"Stroke\", \"diagnosis\", \"G459\",\n  \n  # ------------------------------------------------------------------\n  # Pneumonia NOS\n  # ------------------------------------------------------------------\n  \"Pneumonia NOS\", \"diagnosis\", \"J12\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J13\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J14\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J15\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J16\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J17\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J18\",\n  \n  # Pneumonia-related respiratory failure / complications\n  \"Pneumonia NOS\", \"diagnosis\", \"J960\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J961\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J969\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J80\",     # ARDS\n  \"Pneumonia NOS\", \"diagnosis\", \"J81\",\n  \"Pneumonia NOS\", \"diagnosis\", \"J982\",\n  \n  # Pneumonia procedures (ICD-10-PCS)\n  \"Pneumonia NOS\", \"procedure\", \"0W993ZX\",  # Thoracentesis, diagnostic\n  \"Pneumonia NOS\", \"procedure\", \"0W9B3ZX\",  # Bronchoscopy, diagnostic\n  \n  # ------------------------------------------------------------------\n  # Pleural disease\n  # ------------------------------------------------------------------\n  \"Pleural Disease\", \"diagnosis\", \"J90\",\n  \"Pleural Disease\", \"diagnosis\", \"J91\",\n  \"Pleural Disease\", \"diagnosis\", \"J92\",\n  \n  # ------------------------------------------------------------------\n  # Mediastinal\n  # ------------------------------------------------------------------\n  \"Mediastinal Diagnosis\", \"diagnosis\", \"J98\",\n  \n  # ------------------------------------------------------------------\n  # Signs and symptoms of infection\n  # ------------------------------------------------------------------\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"R509\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"R5081\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"R6510\",\n  \"Signs and Symptoms of Infection\", \"diagnosis\", \"R6520\",\n  \n  # ------------------------------------------------------------------\n  # Infection NOS / sepsis spectrum\n  # ------------------------------------------------------------------\n  \"Infection NOS\", \"diagnosis\", \"A419\",\n  \"Infection NOS\", \"diagnosis\", \"B999\",\n  \"Infection NOS\", \"diagnosis\", \"R6521\",\n  \"Infection NOS\", \"diagnosis\", \"Z8619\"\n)\n\nicd_combined_map &lt;- bind_rows(icd9_map, icd10_map)",
+    "crumbs": [
+      "Code",
+      "Setup and helper functions",
+      "Setup"
+    ]
+  },
+  {
+    "objectID": "quarto/about.html",
+    "href": "quarto/about.html",
+    "title": "About",
+    "section": "",
+    "text": "This study asks how often kidney transplant recipients with cryptococcosis had earlier health care encounters that may have been missed opportunities for diagnosis. The analysis is preliminary: the analysis plan is a proposal not yet adopted, and no results have been released.\n\nVagish Hemmige\nHyun ah Yoon\n\nVagish Hemmige and Hyun ah Yoon make the scientific decisions. Open decisions are listed in GitHub Issues.",
+    "crumbs": [
+      "About"
+    ]
+  },
+  {
+    "objectID": "quarto/about.html#the-study",
+    "href": "quarto/about.html#the-study",
+    "title": "About",
+    "section": "",
+    "text": "This study asks how often kidney transplant recipients with cryptococcosis had earlier health care encounters that may have been missed opportunities for diagnosis. The analysis is preliminary: the analysis plan is a proposal not yet adopted, and no results have been released.\n\nVagish Hemmige\nHyun ah Yoon\n\nVagish Hemmige and Hyun ah Yoon make the scientific decisions. Open decisions are listed in GitHub Issues.",
+    "crumbs": [
+      "About"
+    ]
+  },
+  {
+    "objectID": "quarto/about.html#this-repository",
+    "href": "quarto/about.html#this-repository",
+    "title": "About",
+    "section": "This repository",
+    "text": "This repository\nR/main.R runs the scripts in order: setup, cohort construction, and figures. The data come from the United States Renal Data System (USRDS), including its linked Medicare claims, loaded through the {usRds} package. USRDS data are restricted under a data use agreement, so they are not in the repository; the code runs only where an authorized person has access to them.\nContributions follow the rules in AGENTS.md; known issues and open decisions are tracked in Issues.",
+    "crumbs": [
+      "About"
+    ]
+  },
+  {
+    "objectID": "quarto/about.html#how-this-website-was-created",
+    "href": "quarto/about.html#how-this-website-was-created",
+    "title": "About",
+    "section": "How this website was created",
+    "text": "How this website was created\nThe site is built with Quarto from the analysis scripts themselves. Each code page imports the labelled sections of its script from R/ and shows them with an explanation; the site never runs the analysis, so it is built without the analysis data. A GitHub Actions workflow renders and publishes it whenever master changes.\nThe repository follows the R Analysis Workflow plugin and the layout of Cryptococcus-cost-analysis. AI assistants may help draft and review code and documentation. They never see the USRDS data, they work on synthetic data only, and every change reaches master only through a pull request a person reviews and merges.\nFour documents describe the project. In short: the plan is the scientific intent, the architecture is the workflow as implemented, and AGENTS.md holds the rules for working together.\n\nAnalysis plan: what the analysis is meant to do, and why. The question, the population, the methods, and the open decisions. Code implements it and does not redefine it.\nArchitecture: how the code does it. The scripts, the order they run in, what each needs and produces, and how data flow between them.\nAGENTS.md: how people and AI assistants work on the project. Rules for restricted data, coding, checks, proposing changes and getting a person’s approval.\nRepository blueprint: the layout every project of this kind starts from, which the architecture document then describes as built.",
+    "crumbs": [
+      "About"
+    ]
+  },
+  {
+    "objectID": "quarto/about.html#pages",
+    "href": "quarto/about.html#pages",
+    "title": "About",
+    "section": "Pages",
+    "text": "Pages\n\nSetup: packages, shared constants, and the cryptococcosis and missed-opportunity code lists.\n1. Create cohort: builds the cohort through the flowchart and attaches residence and transplant-center information.\nFigures: draws the cohort flow diagram.",
+    "crumbs": [
+      "About"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html",
+    "href": "quarto/agents.html",
+    "title": "",
+    "section": "",
+    "text": "Project documentsAGENTS.md Code",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#the-project",
+    "href": "quarto/agents.html#the-project",
+    "title": "",
+    "section": "The project",
+    "text": "The project\nThis is an R analysis project, not an R package. It examines potential missed opportunities to diagnose cryptococcosis among kidney transplant recipients using USRDS and Medicare claims. The code and methods are published as a Quarto website. Do not introduce package infrastructure or impose CRAN conventions.\n\nThe analysis plan is the scientific source of truth. Code implements the plan; it does not redefine it. If implementation needs a different design, open a decision issue, or comment on the existing one, for the deciders. Once a decider has settled it (in the issue, or relayed there in their exact words), the plan change and the code can go in the same pull request, which closes the issue. Track decisions in Git history and issues rather than a change ledger within the plan.\nDeciders. Scientific decisions in every area are made by Vagish Hemmige and Hyun ah Yoon. Anyone may open or contribute to a decision issue; only a decider settles it (see “Working with agents”).\nDo not make unresolved scientific decisions implicitly through code. Check relevant open GitHub issues before implementing analyses that depend on them.\nMaintain implementation status and defects in GitHub Issues rather than in a standing list inside this file.\nDefault branch: master. Changes reach it only through pull requests.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#data-sources",
+    "href": "quarto/agents.html#data-sources",
+    "title": "",
+    "section": "Data sources",
+    "text": "Data sources\nEach source this project uses is listed below with the package that accesses it. Code that touches a source goes through its package. Do not write project-specific loading, cleaning, or definition code for something the package already does.\n\n\n\n\n\n\n\n\n\n\n\nSource\nAccessed through\nPackage documentation\nPackage maintained by\nAccess\nWhat AI agents may do\n\n\n\n\nUSRDS standard analysis files, including linked Medicare claims and payer history (release as recorded for each result)\n{usRds} (load_usrds_file(), get_IN_ICD(), get_PS_ICD())\nhttps://vagishhemmige.github.io/usRds/\nThis team\nRestricted (USRDS data use agreement)\nNone: code, documentation and synthetic data only\n\n\n\nTo allow more for a source, a person changes its row through a pull request, naming the agreement and section that permit it, the approved AI service, and exactly what agents may do. Agents never propose or make this change themselves, and nothing in personal instructions can grant it.\nAdd a row when code first loads a new source (for example, the USDA ZIP-code RUCA file the plan’s geographic analyses use).\nFor every package:\n\nRead its documentation before writing code for a source, including known issues. Behavior that sets the cohort, an exposure, an outcome, or a denominator is checked in the documentation, not assumed from a function’s name.\n\nFor packages this team maintains: see “Look in {usRds} first” below.\nFor external packages:\n\nWork around problems here. Wrap the function in R/functions.R with a comment explaining the problem and linking any upstream issue. Reporting a bug upstream is an external communication; the person directing the work decides whether to file it.\nFacts about the source that this project relies on (definitions, release quirks, suppression rules) go in references/ with a citation to the provider’s documentation, or in the plan when they shape a decision.\n\nFor a source with no package: one loading script records the download URL, the release or access date, and any processing. Verify its variables against the provider’s documentation for that release.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#exploration-and-definitive-analysis",
+    "href": "quarto/agents.html#exploration-and-definitive-analysis",
+    "title": "",
+    "section": "Exploration and definitive analysis",
+    "text": "Exploration and definitive analysis\nExploration is welcome on branches or forks. Experimental scripts need not be sourced from R/main.R or have Quarto pages, and their findings are labelled preliminary. A script becomes part of the definitive analysis when it is sourced from R/main.R; from then on every rule below applies to it.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#r-scripts",
+    "href": "quarto/agents.html#r-scripts",
+    "title": "",
+    "section": "R scripts",
+    "text": "R scripts\n\nOpen the .Rproj and run R/main.R from the project root. main.R sources definitive scripts in dependency order.\nKeep scripts focused on one analytical responsibility. Study-specific scripts may be grouped in stage-specific subdirectories. Include a short header stating the script’s role, its required upstream objects, and what it produces.\nWhen a definitive script is added or structurally reorganized, source it in main.R as appropriate and update ARCHITECTURE.md in the same pull request when the change materially affects structure or data flow. ARCHITECTURE.md describes current implementation, not planned work.\nDefine shared libraries, paths, configurable analytical constants, and their dependencies in R/setup.R. Other scripts do not call library(), re-source setup.R, or hard-code study parameters. Large, version-controlled code lists may live in separate files sourced by setup.R.\nPlace reusable helpers in R/functions.R, or organized subdirectories when warranted. Prefer explicit function arguments over dependence on global objects.\nAvoid setwd(), machine-specific absolute paths, and writes outside designated project outputs. Locate restricted USRDS inputs through {usRds}’s directory configuration.\nNo results in the repository. No script (exploratory or definitive) or comment, commit message, issue, pull-request text or review report contains results, counts or data values from restricted data unless they are cleared for release. Check before every commit and post, since a public repository publishes everything pushed to it, on any branch.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#chunk-labels",
+    "href": "quarto/agents.html#chunk-labels",
+    "title": "",
+    "section": "Chunk labels",
+    "text": "Chunk labels\nScripts are divided into labelled sections so Quarto can reuse code without copying it:\n## ---- cryptococcus-claims\n\nLabel logical steps with descriptive kebab-case identifiers unique across scripts; a duplicate silently picks up the wrong code. A label covers code up to the next label.\nBefore renaming or removing a label, check the .qmd pages that reference it.\nLabels are comments; the underlying R scripts must remain executable through main.R.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#variable-labels",
+    "href": "quarto/agents.html#variable-labels",
+    "title": "",
+    "section": "Variable labels",
+    "text": "Variable labels\n\nLabel analytical variables with human-readable descriptions (for example, labelled::set_variable_labels()).\nFor USRDS fields, prefer usRds::apply_usrds_varlabels() and usRds::apply_usrds_factors() rather than duplicating source labels.\nLabel derived variables where created, including units and time windows where relevant.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#quarto-website",
+    "href": "quarto/agents.html#quarto-website",
+    "title": "",
+    "section": "Quarto website",
+    "text": "Quarto website\nThe site documents the code. It does not run the analysis. Exploratory scripts need no page.\n\n_quarto.yml, index.qmd, 404.qmd (the page GitHub Pages shows for a missing address) and styles.css sit at the root; quarto/ has one page per definitive script, named after it (for example, quarto/create_cohort.qmd for R/create_cohort.R), plus the Background, Study design and methods, About and project-document pages. The custom-callout extension in _extensions/ provides the Rcode, Results and Pending callouts.\nVisual cues. Each kind of page has one sidebar icon, coloured by styles.css, and pages mark the same kind of content with the callout of that colour: background book (blue); study design and methods diagram-3 (orange); R code laptop (pink, Rcode 💻); results clipboard-data (green, Results 📊); project documents file-earmark-ruled (grey). Give every new page the icon of its kind.\nProvisional content. quarto/_pending.lua highlights in yellow every paragraph that starts with Decision pending: or, in the plan, Open:, and any [text]{.pending}, and adds a ⏳ Pending callout to pages that have a mark. Mark only what an open decision could change, link the decision issue, and remove the mark when the decision is settled.\nProject documents. analysis-plan.md, ARCHITECTURE.md, AGENTS.md and REPOSITORY-BLUEPRINT.md are shown on the site by pages in quarto/ that only include the root file, which stays the one source: edit the root file, not the page.\nEach script page loads its script with knitr::read_chunk(\"../R/&lt;script&gt;.R\") in a hidden chunk and shows each labelled section with #| eval: false, with prose explaining what the section does and why, without duplicating source code. Pages link to the script on GitHub and to the scripts it depends on.\nNever evaluate analysis code in the site. Pages render without restricted data. Only the read_chunk() imports, the Architecture page’s chunk that reads ARCHITECTURE.md, site helpers that read code or text, and results pages that read cleared outputs run. Review any proposed publication of aggregate results separately for disclosure compliance.\nPublishing. The site renders to docs/, which is not committed: a GitHub Actions workflow (.github/workflows/publish.yml) renders it on every push to master and publishes it to the gh-pages branch, which GitHub Pages serves. On a pull request the workflow only renders, as a check that every page builds.\nWhen you add a definitive script, add its page and sidebar entry in the same pull request. Prose must match the code: if a change alters what a section does, or its chunk labels, update its explanation and navigation in the same pull request.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#outputs",
+    "href": "quarto/agents.html#outputs",
+    "title": "",
+    "section": "Outputs",
+    "text": "Outputs\n\nR/tables.R and R/figures.R may create outputs directly or orchestrate specialized scripts, exporting to tables/ and figures/.\ntables/ and figures/ are gitignored until USRDS review before publication clears them for release, because they come from restricted data: agents may not open them (see Restricted data). Commit cleared, nonrestricted results only when intentional. Disclosure rules apply to all outputs.\nPublished figures need alt text.\nREADME.Rmd is the source of README.md; edit the .Rmd and re-knit.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#restricted-data-applies-to-everyone",
+    "href": "quarto/agents.html#restricted-data-applies-to-everyone",
+    "title": "",
+    "section": "Restricted data (applies to everyone)",
+    "text": "Restricted data (applies to everyone)\nUSRDS and Medicare data are governed by a data use agreement (DUA). Applicable DUA requirements take precedence over convenience or automation. The Access column of “Data sources” says which sources are restricted. For each restricted source:\n\nNever commit data, extracts, person-level data objects, or saved objects or outputs derived from patient-level records. Keep restricted source data outside the repository, and review output paths and .gitignore before adding new output types.\nAI agents never read restricted data. Anything an agent opens, prints, or summarizes is sent to the model provider. Agents do not open data files or patient-level objects, print rows, or display identifiers (including USRDS IDs), person-level dates, or ZIP codes. Agents also do not open outputs from restricted data that are not yet cleared for release (for example tables/ and figures/ while they are ignored). Agents write code, review it, and run it on synthetic data; results on real data are produced by an authorized person in an authorized environment. A request to execute a pipeline does not itself provide authorization. The only exception is what the Data sources table explicitly allows for a source, and only within those words.\nSynthetic data are built in code, labelled as synthetic, and never derived from real records.\nDisclosure. Prevent disclosure of counts 1–10 in tables, figures, flowcharts, or prose, including counts recoverable by subtraction or complementary cells. Follow the applicable DUA’s exact dissemination rules. Check every output before it leaves the approved environment, including scripts, comments, commit messages, issues, pull-request text and review reports (see R scripts).\nCredentials and paid APIs. Never commit keys, tokens, or .Renviron. Ask before paid, bulk, or uncached API calls.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#look-in-usrds-first",
+    "href": "quarto/agents.html#look-in-usrds-first",
+    "title": "",
+    "section": "Look in usRds first",
+    "text": "Look in usRds first\nThe {usRds} package is the first place to look for USRDS file loading, claims extraction, claim types, diagnosis dates, Medicare coverage, cohort helpers, and costs.\n\nCheck its documentation, known limitations, and open issues before reproducing functionality locally.\nRaise generally reusable defects or enhancements in {usRds}; prefer fixes there. Temporary project-specific wrappers must identify the upstream issue and be reconsidered when resolved.\nWhen this analysis depends on a pending {usRds} enhancement or correction, track the study-specific implementation task here and link it to the corresponding {usRds} issue.\nRecord the {usRds} version or commit used for any result.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#usrds-data-facts",
+    "href": "quarto/agents.html#usrds-data-facts",
+    "title": "",
+    "section": "USRDS data facts",
+    "text": "USRDS data facts\nSources: the Researcher’s Guide, Appendix B, and Appendix C for the specific USRDS release being analyzed. The summary below is a starting point, not a replacement for release-appropriate documentation. Obtain the applicable public documents from the NIDDK Researcher’s Guide page. Consult {usRds} for machine-readable variable labels and formats.\nInstitutional (IN) claims include inpatient, outpatient, skilled nursing facility, home health, and hospice services.\n\nHCFASAF historically distinguishes I inpatient, O outpatient, N SNF, H home health, and S hospice; older data can include M for REBUS inpatient stays.\nSince 2002, corresponding file families include ip_*, op_*, sn_*, hh_*, and hs_*, generally with CLM, DXP, and DET records. Confirm structure for the release.\nInstitutional claim identifiers include USRDS_ID, CLM_FROM, and SEQ_KEYC; verify the applicable key in source documentation.\n\nPhysician/supplier (PS) claims have CLM, LINE, and DX sources.\n\nClaim lines are not necessarily distinct encounters. Define and validate episode grouping before counting services; distinguish diagnoses, procedures, and claim-level versus line-level records.\nPhysician/supplier services are not synonymous with outpatient care.\n\nClaims year: claims can be assigned by service end date rather than start date; verify against release documentation and account for claims crossing year boundaries.\n2025-release data currency (illustrative only; re-verify for the release used): claims complete through 2023-12-31 except the Q1 2024 inpatient file; core files including death dates extend through 2024-12-31. Do not infer contemporaneous coverage of claims and vital status.\nPayer history (payhist): payer categories and Medicare FFS observability must be verified against the release-specific guide. The primary versus sensitivity coverage definitions are prescribed in analysis-plan.md, not here. Pay attention to Medicare Advantage, Medicare secondary payer categories, uncovered days, and Medicare entitlement transitions after transplantation.\nICD transition: ICD-9-CM applies before 2015-10-01; ICD-10-CM and ICD-10-PCS on or after that date. Codes may omit decimals. Establish the date controlling the code system for claims spanning the transition, and verify against official code-set definitions.\nUnclear variables: consult the relevant Appendix B/C and source code documentation rather than inferring meaning from variable names.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#coding-conventions",
+    "href": "quarto/agents.html#coding-conventions",
+    "title": "",
+    "section": "Coding conventions",
+    "text": "Coding conventions\n\nBuild descriptive flowchart text from centrally defined parameters so labels cannot become stale when an analysis window changes.\nCode lists: maintain code type, coding system, category, and exact/prefix matching; verify against official coding sources. Distinguish outcome from opportunity codes and personal-history from symptom codes. Do not invent clinical definitions or variables. Check category overlaps and clinically justified exceptions rather than assuming all codes are mutually exclusive.\nCohort flow: every patient-level inclusion or exclusion goes through fc_filter() in the {flowchart} workflow. Do not drop rows from $data outside the flowchart; the diagram must reproduce the cohort exactly.\nJoins: specify join keys and expected relationships. Check row multiplication, particularly after interval joins, and define handling of missing or unmatched records explicitly.\nDates and windows: implement the boundaries prespecified in the analysis plan; test boundary cases on synthetic data.\nCode that turns model output into reported numbers lives in named functions in R/functions.R, tested on synthetic data with a known answer.\nPackage APIs: read the help page and NEWS for the installed version before calling a package; don’t write calls from memory.\nStyle: use readable tidyverse conventions. Related readability improvements may accompany functional changes; keep unrelated large-scale formatting separate.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#checks-for-any-change",
+    "href": "quarto/agents.html#checks-for-any-change",
+    "title": "",
+    "section": "Checks for any change",
+    "text": "Checks for any change\nBefore presenting changes for review or seeking commit approval, perform the applicable checks below. Report which checks were completed, which were not, and any limitations.\nEvery change\n\nPlan: does the change implement the plan as written, and does it leave every open decision open?\nData sources: does it use {usRds}’s functions, and does their documented behavior match what the plan needs?\nPackage APIs: for new or changed calls to a package, does the pull request name the installed version and the help page or NEWS entry relied on?\nReported numbers: does each estimate match the plan’s estimand, and do tables, figures, and site prose say what the code actually computes?\nDisclosure: search every changed tracked file, and the commit messages and pull-request text, for dates, record IDs, names, absolute paths and numbers that could come from restricted data. Read each hit in context; legitimate ones (plan dates, deciders’ names, synthetic examples) stay.\n\nCohort construction\n\nDo the order, denominator, and labels of flowchart steps reflect the actual conditions?\nAre the cohort counts reproducible from the operations shown?\nIs downstream analysis based on the final flowchart dataset?\n\nClaims and case definitions\n\nWhich claim files, claim types, diagnosis fields, and date fields are used?\nAre exact/prefix matching and ICD-9/ICD-10 date transitions handled appropriately?\nCan history codes, rule-out diagnoses, or outcome codes contaminate opportunities?\n\nWindows and coverage\n\nDoes index ascertainment agree with the analysis plan?\nAre date-window boundaries correct and inclusive where specified?\nDoes eligible Medicare coverage span the entire required observation period, with adjacent spans joined without allowing gaps?\n\nTransplant timing\n\nAre first and repeat transplants distinguished where the analysis requires them?\nAre transplant dates and characteristics drawn from the correct episode according to the analysis plan?\nAre graft failure and repeat transplants treated as prespecified?\n\nResidence and facility\n\nIs residence information valid for the relevant date?\nIs facility information aligned to the appropriate year and transplant center?\nAre historical identifiers and changes in identifiers accounted for?\n\nStructure and documentation\n\nDoes ARCHITECTURE.md describe current scripts and data flow when structural changes warrant an update?\nAre chunk labels unique, and do Quarto pages continue to find the labels they reference?\nDoes every definitive script have a Quarto page and sidebar entry, with matching chunk labels? Were affected pages and navigation updated?\nDoes any site chunk evaluate analysis code, and are derived variables labeled?\n\nExecution\n\nDoes main.R run from a clean session, using suitable relative paths?\nAre machine-specific absolute paths or hard-coded restricted-data directories absent?\nAre package versions and saved intermediates documented and checked for staleness?\n\nValidation on real data (by an authorized person only; share only permitted, disclosure-reviewed aggregate findings)\n\nRow counts before and after interval joins.\nCounts of people with multiple matching coverage or residence spans.\nCase counts by ICD-9 versus ICD-10 era and by claim type.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/agents.html#working-with-agents",
+    "href": "quarto/agents.html#working-with-agents",
+    "title": "",
+    "section": "Working with agents",
+    "text": "Working with agents\n\nAutonomy. The person directing an agent sets its working style (review only, step by step, or hands-off) in their own instructions, and may add stricter rules; those take precedence. Without a style, an agent works step by step. At most, an agent may edit code and documentation, add scripts and tests, run code and render the site on synthetic data, and commit to a branch and open a pull request. Explicit approval is required before committing changes or opening a pull request.\nDecisions. Anyone, including an agent, may add options and evidence to a decision issue. A decider states the choice in the issue. Agents implement decisions; they never choose among options on their own, in the issue, the plan, or the code.\nEvery agent, under any autonomy: never merges a pull request; follows the restricted-data rules; asks before running the full pipeline or making expensive external/API calls (approval for these does not override DUA restrictions); shows a person the exact text before posting or sending anything as them, unless that person’s own instructions waive this; and proposes another way of writing something already agreed before committing it.\nPull requests opened by an agent are focused. Each says which plan section or issue it addresses, what was checked, and whether by running code on synthetic data or by reading only. Synthetic results are never described as clinical results.\nScientific citations: maintain verified references in root-level references.bib; cite methodological sources in analysis-plan.md and technical references with the corresponding implementation documentation. Verify bibliographic metadata, source support for claims, and compatibility with the data release being analyzed.",
+    "crumbs": [
+      "Project documents",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "objectID": "quarto/create_cohort.html",
+    "href": "quarto/create_cohort.html",
+    "title": "1. Create cohort",
+    "section": "",
+    "text": "This script builds the cohort of kidney transplant recipients with a cryptococcosis claim after their first transplant and Medicare primary coverage before it, records each exclusion in a flowchart, and attaches residence and transplant-center information for later scripts.\nEvery inclusion and exclusion goes through fc_filter() from the {flowchart} package, so the cohort flow diagram drawn on the Figures page reproduces the cohort exactly. The cohort used downstream is patients_fc$data after the last step.",
+    "crumbs": [
+      "Code",
+      "Data processing and analysis",
+      "1. Create cohort"
+    ]
+  },
+  {
+    "objectID": "quarto/create_cohort.html#load-the-patient-file",
+    "href": "quarto/create_cohort.html#load-the-patient-file",
+    "title": "1. Create cohort",
+    "section": "Load the patient file",
+    "text": "Load the patient file\nThe USRDS patients file supplies one row per person with demographics and transplant summary fields, loaded through usRds::load_usrds_file(). Its ZIP code is dropped here because it is the ZIP code when the person entered USRDS; the analysis needs residence at the time of the cryptococcosis claim, which is attached in the last step.\n\n\nClick to show/hide R Code\n#Import core demographics from \"patients\" file\npatients_raw&lt;-usRds::load_usrds_file(\"patients\")%&gt;%\n  select(-ZIPCODE) #This is ZIP code at time of USRDS initiation, but we want at time of crypto dx",
+    "crumbs": [
+      "Code",
+      "Data processing and analysis",
+      "1. Create cohort"
+    ]
+  },
+  {
+    "objectID": "quarto/create_cohort.html#start-the-flowchart",
+    "href": "quarto/create_cohort.html#start-the-flowchart",
+    "title": "1. Create cohort",
+    "section": "Start the flowchart",
+    "text": "Start the flowchart\nThe patient file becomes a flowchart object, and the first step keeps people with at least one recorded transplant (TOTTX &gt; 0).\n\n\nClick to show/hide R Code\n#Initialize a flowchart cohort and remove patients who have never had a transplant\npatients_fc&lt;-patients_raw%&gt;%\n  as_fc(label=\"Initial USRDS cohort\")%&gt;%\n\n  fc_filter(TOTTX&gt;0,\n            label=\"Prior transplant\",\n            label_exc=\"Excluded: No prior transplant\",\n            show_exc=TRUE)",
+    "crumbs": [
+      "Code",
+      "Data processing and analysis",
+      "1. Create cohort"
+    ]
+  },
+  {
+    "objectID": "quarto/create_cohort.html#find-cryptococcosis-claims",
+    "href": "quarto/create_cohort.html#find-cryptococcosis-claims",
+    "title": "1. Create cohort",
+    "section": "Find cryptococcosis claims",
+    "text": "Find cryptococcosis claims\nFor the people still in the cohort, get_IN_ICD() and get_PS_ICD() from {usRds} search the institutional and physician/supplier claims of the years in claim_years for the codes in cryptococcus_ICD_list (see Setup). The two sets are stacked, and each person’s earliest claim of any type, by claim start date, is kept as first_cryptococcus_date.\nSection 3 of the analysis plan specifies a confirmed case (one inpatient stay, or two noninpatient encounters no more than 30 days apart), an index date within the qualifying episode, a uniform prior-history exclusion, and excludes skilled nursing, home health and hospice claims from ascertainment (section 2). The current code uses the first single claim and does not yet apply those rules.\n\n\nClick to show/hide R Code\n#Create list of USRDS ids for patients who have undergone transplant\ntransplant_id_list&lt;-patients_fc$data%&gt;%\n  pull(USRDS_ID)\n\n#Obtain cryptococcus claims from the IN and PS files\ncryptococcus_claims_df&lt;-bind_rows(get_IN_ICD(icd_codes = cryptococcus_ICD_list,\n                                             years = claim_years,\n                                             usrds_ids = transplant_id_list),\n                                  get_PS_ICD(icd_codes = cryptococcus_ICD_list,\n                                             years = claim_years,\n                                             usrds_ids = transplant_id_list)%&gt;%\n                                    rename(CODE=DIAG))\n\n#Keep the first cryptococcus claim of any type for each patient\ncryptococcus_df&lt;-cryptococcus_claims_df%&gt;%\n  slice_min(CLM_FROM, n = 1, with_ties = FALSE, by = USRDS_ID)%&gt;%\n  select(USRDS_ID, first_cryptococcus_date=CLM_FROM)",
+    "crumbs": [
+      "Code",
+      "Data processing and analysis",
+      "1. Create cohort"
+    ]
+  },
+  {
+    "objectID": "quarto/create_cohort.html#apply-the-claim-and-transplant-timing-steps",
+    "href": "quarto/create_cohort.html#apply-the-claim-and-transplant-timing-steps",
+    "title": "1. Create cohort",
+    "section": "Apply the claim and transplant-timing steps",
+    "text": "Apply the claim and transplant-timing steps\nThe first claim date is joined to the cohort one-to-one by USRDS_ID. Two flowchart steps follow: people with no cryptococcosis claim in the search years are excluded, and so are people whose first claim is not after their first transplant date (TX1DATE). The plan requires a kidney transplant strictly before the index date (section 4).\n\n\nClick to show/hide R Code\n#Join cryptococcus date to fc cohort (one row per patient on both sides)\npatients_fc$data&lt;-patients_fc$data%&gt;%\n  left_join(cryptococcus_df,\n            by = \"USRDS_ID\",\n            relationship = \"one-to-one\")\n\npatients_fc&lt;-patients_fc%&gt;%\n\n  #Filter by whether or not the patient had a claim in the study period\n  fc_filter(!is.na(first_cryptococcus_date),\n            label=\"At least one cryptococcus claim 2006-2021\",\n            label_exc=\"No cryptococcus claim 2006-2021\",\n            show_exc=TRUE)%&gt;%\n\n  #Filter by whether or not the first claim was subsequent to the first kidney transplant date\n  fc_filter(first_cryptococcus_date&gt;TX1DATE,\n            label=\"Cryptococcus subsequent to first transplant\",\n            label_exc=\"Excluded: Cryptococcus prior to first transplant\",\n            show_exc=TRUE)",
+    "crumbs": [
+      "Code",
+      "Data processing and analysis",
+      "1. Create cohort"
+    ]
+  },
+  {
+    "objectID": "quarto/create_cohort.html#apply-the-medicare-coverage-steps",
+    "href": "quarto/create_cohort.html#apply-the-medicare-coverage-steps",
+    "title": "1. Create cohort",
+    "section": "Apply the Medicare coverage steps",
+    "text": "Apply the Medicare coverage steps\nusRds::verify_medicare_primary() adds the Medicare primary coverage spell in force on the first claim date, if any, and medicare_primary_TF, which is true when that spell began at least lookback_days earlier. A check stops the script if the coverage join produced more than one row for anyone. Two flowchart steps then keep people with Medicare primary coverage on the claim date, and people with coverage for the full lookback.\nThe plan’s primary cohort requires uninterrupted Medicare fee-for-service Parts A and B (MPAB) coverage from day −365 through day 0, with broader primary coverage (MPAB or MPO) as a sensitivity analysis (section 4). Which payer categories count as primary here is set by verify_medicare_primary(); see the {usRds} documentation.\n\n\nClick to show/hide R Code\n#Mark Medicare FFS primary coverage on the date of the first cryptococcus claim, and whether\n#that coverage spell began at least lookback_days earlier (adds medicare_primary_TF)\npatients_fc$data&lt;-patients_fc$data%&gt;%\n  verify_medicare_primary(index_date = \"first_cryptococcus_date\",\n                          lookback_days = lookback_days,\n                          coverage_start_variable = \"coverage_start_date\",\n                          coverage_end_variable = \"coverage_end_date\")\n\n#Confirm the coverage join did not duplicate patients\nif (anyDuplicated(patients_fc$data$USRDS_ID) &gt; 0) {\n  stop(\"Medicare coverage join produced more than one row for some patients.\")\n}\n\npatients_fc&lt;-patients_fc%&gt;%\n\n  #Filter by Medicare primary coverage on day of claim\n  fc_filter(!is.na(coverage_start_date),\n            label=\"Medicare is primary coverage on date of claim\",\n            label_exc=\"Other coverage on date of claim\",\n            show_exc=TRUE)%&gt;%\n\n  #Filter by coverage for lookback_days before the claim\n  fc_filter(medicare_primary_TF,\n            label=\"365+ days of coverage prior to first cryptococcus claim\",\n            label_exc=\"Fewer than 365 days of coverage\",\n            show_exc=TRUE)",
+    "crumbs": [
+      "Code",
+      "Data processing and analysis",
+      "1. Create cohort"
+    ]
+  },
+  {
+    "objectID": "quarto/create_cohort.html#attach-residence-and-transplant-center",
+    "href": "quarto/create_cohort.html#attach-residence-and-transplant-center",
+    "title": "1. Create cohort",
+    "section": "Attach residence and transplant center",
+    "text": "Attach residence and transplant center\nThe residenc file is joined to the cohort by an interval join, keeping the residence spell that contains the first claim date, and a check stops the script if that join duplicated anyone. The tx file is loaded with each transplant’s date, graft failure date, and center, and each transplant gets the date of the person’s next transplant (a far-future date when there is none), ready for choosing the transplant episode that precedes the index date. The facility file supplies each center’s ZIP code by year, matched to each transplant by center and the closest facility year at or after the transplant year.\nThese transplant and facility tables (transplant_df, transplant_joined) are built but not yet joined to the cohort. The plan uses the most recent kidney transplant before index for transplant characteristics and center (section 4).\n\n\nClick to show/hide R Code\n#Load ZIP codes\nZIP_code_df&lt;-load_usrds_file(\"residenc\",\n                             usrds_ids = patients_fc$data$USRDS_ID)%&gt;%\n  select(USRDS_ID, ZIPCODE, BEGRES, ENDRES)\n\n#Join patient cohort to ZIP code at the date of the first cryptococcus claim\npatients_fc$data&lt;-left_join(patients_fc$data,\n                            ZIP_code_df,\n                            join_by(USRDS_ID, between(first_cryptococcus_date, BEGRES, ENDRES)))\n\n#Confirm the residence join did not duplicate patients\nif (anyDuplicated(patients_fc$data$USRDS_ID) &gt; 0) {\n  stop(\"Residence join produced more than one row for some patients.\")\n}\n\n#Load transplant data, and add a date for the next transplant (missing set to 1-1-2100)\ntransplant_df&lt;-load_usrds_file(\"tx\", usrds_ids = patients_fc$data$USRDS_ID)%&gt;%\n  select(USRDS_ID, TDATE, FAILDATE, PROVUSRD, YEAR)%&gt;%\n  arrange(USRDS_ID, TDATE)%&gt;%\n  group_by(USRDS_ID)%&gt;%\n  mutate(TDATE_lead=lead(TDATE))%&gt;%\n  ungroup()%&gt;%\n  mutate(TDATE_lead=coalesce(TDATE_lead, as.Date(\"2100-01-01\")))\n\n#Load facility data\nfacility &lt;- load_usrds_file(\"facility\")%&gt;%\n  select(ZIPCODE, PROVUSRD, FS_YEAR)%&gt;%\n  rename(YEAR=FS_YEAR)%&gt;%\n  mutate(YEAR=as.double(YEAR))\n\n#Interval merge\ntransplant_joined&lt;-left_join(transplant_df, facility, join_by(PROVUSRD, closest(x$YEAR&lt;=y$YEAR )))",
+    "crumbs": [
+      "Code",
+      "Data processing and analysis",
+      "1. Create cohort"
     ]
   }
 ]

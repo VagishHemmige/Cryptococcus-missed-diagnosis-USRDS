@@ -101,7 +101,7 @@ div.csl-indent {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-66ae90e4418e9d0ac3caa4b8c3bef75c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-9c6fd4a99ff4209dd1149a1765198857.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script src="site_libs/quarto-contrib/issue-comments-0.3.0/issue-comments.js"></script>
 <link href="site_libs/quarto-contrib/issue-comments-0.3.0/issue-comments.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
@@ -371,6 +371,7 @@ div.callout-Results.callout-style-default .callout-icon::before, div.callout-Res
 <section id="what-this-analysis-does" class="level2">
 <h2 class="anchored" data-anchor-id="what-this-analysis-does">What this analysis does</h2>
 <p>This analysis looks for potential missed opportunities to diagnose cryptococcosis among kidney transplant recipients in the United States. It uses the United States Renal Data System (USRDS) and its linked Medicare fee-for-service claims to find health care encounters, in the 90 days before a recipient’s first observed qualifying cryptococcosis diagnosis, that carried a relevant diagnosis or diagnostic procedure. These are claims-based potential missed opportunities, not confirmed diagnostic errors.</p>
+<p><a href="https://forum.posit.co/t/curly-braces-around-package-name-convention/122547">Braces</a> identify R packages throughout this site.</p>
 </section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
@@ -866,13 +867,15 @@ div.callout-Results.callout-style-default .callout-icon::before, div.callout-Res
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>This analysis looks for potential missed opportunities to diagnose cryptococcosis among kidney transplant recipients in the United States. It uses the United States Renal Data System (USRDS) and its linked Medicare fee-for-service claims to find health care encounters, in the 90 days before a recipient's first observed qualifying cryptococcosis diagnosis, that carried a relevant diagnosis or diagnostic procedure. These are claims-based potential missed opportunities, not confirmed diagnostic errors.</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">## Methods</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Braces</span><span class="co">](https://forum.posit.co/t/curly-braces-around-package-name-convention/122547)</span> identify R packages throughout this site.</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>The primary estimand is the proportion of eligible recipients with at least one qualifying encounter in days −90 through −1, reported separately for diagnosis-based, procedure-based, and combined opportunities, with Wilson 95% confidence intervals <span class="co">[</span><span class="ot">@wilson1927</span><span class="co">]</span>. Secondary analyses examine associations with mortality, rurality, and distance to the transplant center. Reporting follows STROBE and RECORD <span class="co">[</span><span class="ot">@vonelm2007strobe; @benchimol2015record</span><span class="co">]</span>. The <span class="co">[</span><span class="ot">analysis plan</span><span class="co">](quarto/analysis-plan.qmd)</span> is the authoritative specification.</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">## Methods</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">## Status</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>The primary estimand is the proportion of eligible recipients with at least one qualifying encounter in days −90 through −1, reported separately for diagnosis-based, procedure-based, and combined opportunities, with Wilson 95% confidence intervals <span class="co">[</span><span class="ot">@wilson1927</span><span class="co">]</span>. Secondary analyses examine associations with mortality, rurality, and distance to the transplant center. Reporting follows STROBE and RECORD <span class="co">[</span><span class="ot">@vonelm2007strobe; @benchimol2015record</span><span class="co">]</span>. The <span class="co">[</span><span class="ot">analysis plan</span><span class="co">](quarto/analysis-plan.qmd)</span> is the authoritative specification.</span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>This analysis is preliminary. The analysis plan is a proposal that has not yet been adopted, and the code currently builds the initial cohort only. Open decisions and known gaps are tracked in <span class="co">[</span><span class="ot">GitHub Issues</span><span class="co">](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/issues)</span>.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">## Status</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>This analysis is preliminary. The analysis plan is a proposal that has not yet been adopted, and the code currently builds the initial cohort only. Open decisions and known gaps are tracked in <span class="co">[</span><span class="ot">GitHub Issues</span><span class="co">](https://github.com/VagishHemmige/Cryptococcus-missed-diagnosis-USRDS/issues)</span>.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 
